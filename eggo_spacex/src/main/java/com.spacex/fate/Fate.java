@@ -10,7 +10,7 @@ public class Fate {
     List<BallItem> items = new ArrayList<>();
     BallItem.RankComparator cmp = new BallItem.RankComparator();
 
-    public static void main(String[] args){
+    public void main(String[] args){
         new Fate().inspectPoint(1700);
     }
     private int cnt=0;

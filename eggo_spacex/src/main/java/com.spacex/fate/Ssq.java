@@ -16,7 +16,7 @@ import java.util.*;
  * Created by spacex on 15/6/24.
  */
 public class Ssq {
-    public static void main(String[] args){
+    public void main(String[] args){
 //        Ssq s = new Ssq();
 //        List<Integer> red_a = new ArrayList<Integer>(6);
 //        red_a.add(12);
