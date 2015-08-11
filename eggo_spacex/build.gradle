@@ -9,7 +9,6 @@ buildscript {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:1.2.4.RELEASE")
     }
 }
-
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
@@ -18,6 +17,9 @@ apply plugin: 'spring-boot'
 jar {
     baseName = 'spacex.com'
     version =  '0.1.0'
+    //manifest {
+    //    attributes 'Main-Class': 'com.spacex.main.Application'
+    //}
 }
 
 repositories {
