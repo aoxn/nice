@@ -20,7 +20,7 @@ import java.util.stream.Stream;
  */
 public class NiceWorker{
     final Log log = LogFactory.getLog(getClass());
-    long DELAY  = 60*1000;
+    long DELAY  = 5*1000;
     long PERIOD = 4*60*60*1000;
     Timer timer = new Timer();
 
@@ -33,11 +33,14 @@ public class NiceWorker{
             public void run() {
                 String cmd = "python randpicker.py";
                 try {
-                    log.debug("SSQ Thread: " + cmd);
-                    Runtime.getRuntime().exec(cmd);
+                    log.debug("SSQ Thread: " + cmd + " FilePath:" + Paths.get(".").toAbsolutePath().toString());
+                    Runtime.getRuntime().exec(cmd).waitFor();
                 } catch (IOException e) {
                     e.printStackTrace();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
+                log.debug("CMD execute finish...");
             }
         }, DELAY, PERIOD);
 
