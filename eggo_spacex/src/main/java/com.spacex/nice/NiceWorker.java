@@ -3,10 +3,7 @@ package com.spacex.nice;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,17 +25,35 @@ public class NiceWorker{
     public void start(){
 
         timer.schedule(new TimerTask(){
-
+            void close(Reader b ){
+                if (b!=null){
+                    try {
+                        b.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
             @Override
             public void run() {
                 String cmd = "python randpicker.py";
+                log.debug("SSQ Thread: " + cmd + " FilePath:" + Paths.get(".").toAbsolutePath().toString());
+                BufferedReader b = null;
                 try {
-                    log.debug("SSQ Thread: " + cmd + " FilePath:" + Paths.get(".").toAbsolutePath().toString());
-                    Runtime.getRuntime().exec(cmd).waitFor();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    Process p = Runtime.getRuntime().exec(cmd);
+                    int status =p.waitFor();
+                    b =new BufferedReader(new InputStreamReader(p.getErrorStream()));
+                    log.debug("Exit status : "+status);
+                    if (status!=0){
+                        String line,msg="";
+                        while ((line = b.readLine()) != null)
+                            msg+=line+"\n";
+                        log.error("Fail to CALL CMD: "+cmd +" "+msg);
+                    }
+                }catch (InterruptedException|IOException ex) {
+                    ex.printStackTrace();
+                }finally {
+                    close(b);
                 }
                 log.debug("CMD execute finish...");
             }
@@ -46,4 +61,7 @@ public class NiceWorker{
 
     }
 
+    public static void main(String[] args){
+        new NiceWorker().start();
+    }
 }
