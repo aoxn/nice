@@ -19,7 +19,7 @@ class WriteResult(object):
 
     def __call__(self, oper):
         def wrapper(wrap, *args, **kwargs):
-            self.write(str(oper(wrap, *args, **kwargs)),self.mode)
+            self.write(str(oper(wrap, *args, **kwargs))+"\r\n",self.mode)
 
         return wrapper
 

@@ -37,13 +37,13 @@ public class NiceWorker{
             @Override
             public void run() {
                 String cmd = "python randpicker.py start";
-                log.debug("SSQ Thread: " + cmd + " FilePath:" + Paths.get(".").toAbsolutePath().toString());
+                log.info("SSQ Thread: " + cmd + " FilePath:" + Paths.get(".").toAbsolutePath().toString());
                 BufferedReader b = null;
                 try {
                     Process p = Runtime.getRuntime().exec(cmd);
                     int status =p.waitFor();
                     b =new BufferedReader(new InputStreamReader(p.getErrorStream()));
-                    log.debug("Exit status : "+status);
+                    log.info("Exit status : "+status);
                     if (status!=0){
                         String line,msg="";
                         while ((line = b.readLine()) != null)

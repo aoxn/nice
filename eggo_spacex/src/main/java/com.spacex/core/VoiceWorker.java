@@ -67,7 +67,7 @@ public class VoiceWorker implements Runnable{
 			if (pa.length != 2){
 				return "";
 			}
-			if ("FORMAT" == pa[0].toUpperCase() ){
+			if ("FORMAT" .equals(pa[0].toUpperCase()) ){
 				return pa[1];
 			}
 		}
@@ -86,7 +86,7 @@ public class VoiceWorker implements Runnable{
 					//First line is metadata [Format:mp3,Meta:something]
 					String format = getAudioFormatPara(tmp);
 					if (format.equals("")){
-						throw new Exception("Unkonw audio Format , please specify the audio" +
+						throw new IOException("Unkonw audio Format , please specify the audio" +
 								" Format in the first line of input.txt like Format:mp3,Meta:something");
 					}
 					from = file.getName().replace(".txt","")+"."+format;
@@ -110,13 +110,9 @@ public class VoiceWorker implements Runnable{
 			doRename(file,target);
 			doRename(new File(wi.WORKER_PATH+File.separator+from),
 					new File(wi.RESOURCE_PATH+File.separator+from));
-		}catch (ParseException e) {
+		}catch (ParseException|IOException e) {
 			e.printStackTrace();
-		}catch(IOException ex){
-			ex.printStackTrace();
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally{
+		}finally{
 			close(br);
 		}
 		
