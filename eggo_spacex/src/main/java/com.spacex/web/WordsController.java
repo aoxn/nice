@@ -6,13 +6,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.spacex.core.RestResult;
 import com.spacex.core.VersionETY;
 import com.spacex.core.WareHourse;
+import com.spacex.nice.NicePicker;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,6 +23,9 @@ public class WordsController {
 
     @Autowired
     WareHourse wh = null;
+
+    @Autowired
+    NicePicker np = null;
 
     @RequestMapping("/version")
     public VersionETY version() {
@@ -50,6 +50,16 @@ public class WordsController {
     public RestResult result(@RequestParam(value="last", defaultValue="10") String last) throws IOException {
         log.info(last);
         String ret = wh.getLastLocation(last);
+        if (ret.equals("")){
+            return new RestResult("FALSE","ERROR OCCUR");
+        }
+        return new RestResult("TRUE",ret);
+    }
+
+    @RequestMapping("/lucky")
+    public RestResult ssqResult(@RequestParam(value="last", defaultValue="4") int last) throws IOException {
+        log.info(last);
+        String ret = np.getLuckyNumber(last);
         if (ret.equals("")){
             return new RestResult("FALSE","ERROR OCCUR");
         }
