@@ -83,9 +83,9 @@ class RandomNum(Ssq):
         # result: the result of this search
         return json.dumps({
             "seq":len(self.data),
-            "start":time.strftime("%y-%m-%d %H:%M:%S",time.time()),
+            "start":time.strftime("%y-%m-%d %H:%M:%S",time.gmtime()),
             "result":self.round_two(times,cnt),
-            "end":time.strftime("%y-%m-%d %H:%M:%S",time.time())
+            "end":time.strftime("%y-%m-%d %H:%M:%S",time.gmtime())
         })
 
 if __name__ == "__main__":
@@ -93,10 +93,14 @@ if __name__ == "__main__":
     rnd = RandomNum()
     times = 15000
     lines = 6
-    cmd = sys.argv[0]
-    arg = sys.argv[1]
+    arg = ""
+    if len(sys.argv)<2:
+        rnd.log.debug("Not enough argument %s"%sys.argv)
+    cmd = sys.argv[1]
+    if len(sys.argv) == 3:
+        arg = sys.argv[2]
     if str(cmd).lower() == "start":
-        if not arg:
+        if arg:
             try:
                 times = int(arg)
             except:
