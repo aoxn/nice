@@ -89,7 +89,7 @@ public class NicePicker {
 
 
 
-    public static void main(String[] args){
+    public void main(String[] args){
         List<PredictAPI> res = new NicePicker().readResult();
         System.out.println(res.size());
     }
