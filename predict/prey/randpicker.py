@@ -3,7 +3,7 @@
 
 __author__ = 'spacex'
 
-import random,time,numpy as np
+import random,json,time,numpy as np
 import itertools as itto
 from ssq import Ssq
 
@@ -50,11 +50,11 @@ class RandomNum(Ssq):
             for j in second:
                 if len(self.intersection(i,j))>=self.CROSS_LENGTH:
                     self.log.debug("Found Cross: %s,%s"%(i,j))
-                    ret.append(i)
+                    ret.append(str(i))
                     break
         return ret
 
-    @WriteResult("result.txt","w")
+    @WriteResult("result.txt","a+")
     def round_one(self,red,times,cnt=6):
         #random pick 7 ball N times, to see if whether the ball we wanted in it
         ret = []
@@ -63,11 +63,10 @@ class RandomNum(Ssq):
         for i in fi:
             if len(self.intersection(i,red))>=self.CROSS_LENGTH:
                 self.log.debug("Found: %s"%i)
-                ret.append(i)
+                ret.append(str(i))
         return ret
 
 
-    @WriteResult("result.txt","w")
     def round_two(self,times,cnt=6):
         # random pick 7 ball N times, we believe that our BINGO in it.
         # random pick 7 ball N times for twice, the cross set is we meant.
@@ -75,9 +74,33 @@ class RandomNum(Ssq):
         return self.cross_set(self.random_round(times,cnt),
                                  self.random_round(times,cnt))
 
+    @WriteResult("result.txt","a+")
+    def run_nice(self,times,cnt=6):
+        # API data struct
+        #   seq : the sequence of Number
+        # start : the start time of running this search
+        #   end : the finish time of this search
+        # result: the result of this search
+        return json.dumps({
+            "seq":len(self.data),
+            "start":time.strftime("%y-%m-%d %H:%M:%S",time.time()),
+            "result":self.round_two(times,cnt),
+            "end":time.strftime("%y-%m-%d %H:%M:%S",time.time())
+        })
+
 if __name__ == "__main__":
+    import sys
     rnd = RandomNum()
-    #rnd.round_one(1777,100000)
-
-    rnd.round_two(10000)
-
+    times = 15000
+    lines = 6
+    cmd = sys.argv[0]
+    arg = sys.argv[1]
+    if str(cmd).lower() == "start":
+        if not arg:
+            try:
+                times = int(arg)
+            except:
+                pass
+        rnd.run_nice(times)
+    else:
+        rnd.log.debug("CMD error : %s %s"%(cmd,arg))
