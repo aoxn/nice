@@ -5,12 +5,12 @@ package com.spacex.core;
  */
 public class RestResult {
     String result;
-    String message;
+    Object message;
 
     public RestResult() {
     }
 
-    public RestResult(String result, String message) {
+    public RestResult(String result, Object message) {
         this.result = result;
         this.message = message;
     }
@@ -23,11 +23,11 @@ public class RestResult {
         this.result = result;
     }
 
-    public String getMessage() {
+    public Object getMessage() {
         return message;
     }
 
-    public void setMessage(String message) {
+    public void setMessage(Object message) {
         this.message = message;
     }
 }

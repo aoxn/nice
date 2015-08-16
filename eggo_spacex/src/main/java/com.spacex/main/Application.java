@@ -19,7 +19,6 @@ public class Application {
         new Thread(worker).start();
 
         // launch SSQ thread, scheduled every 4 hours
-        System.out.print("xxxxxxxxxxxxxxxx");
         new NiceWorker().start();
     }
 }

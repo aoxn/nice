@@ -1,8 +1,10 @@
 package com.spacex.web;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.spacex.core.PredictAPI;
 import com.spacex.core.RestResult;
 import com.spacex.core.VersionETY;
 import com.spacex.core.WareHourse;
@@ -59,8 +61,8 @@ public class WordsController {
     @RequestMapping("/lucky")
     public RestResult ssqResult(@RequestParam(value="last", defaultValue="4") int last) throws IOException {
         log.info(last);
-        String ret = np.getLuckyNumber(last);
-        if (ret.equals("")){
+        List<PredictAPI> ret = np.getLuckyNumber(last);
+        if (ret == null){
             return new RestResult("FALSE","ERROR OCCUR");
         }
         return new RestResult("TRUE",ret);

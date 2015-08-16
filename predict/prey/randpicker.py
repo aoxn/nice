@@ -83,9 +83,9 @@ class RandomNum(Ssq):
         # result: the result of this search
         return json.dumps({
             "seq":len(self.data),
-            "start":time.strftime("%y-%m-%d %H:%M:%S",time.gmtime()),
+            "start":time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
             "result":self.round_two(times,cnt),
-            "end":time.strftime("%y-%m-%d %H:%M:%S",time.gmtime())
+            "end":time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         })
 
 if __name__ == "__main__":
