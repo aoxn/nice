@@ -3,7 +3,7 @@
 
 __author__ = 'spacex'
 
-import random,json,time
+import random,json,time,sys
 from ssq import Ssq
 
 class WriteResult(object):
@@ -55,7 +55,6 @@ class RandomNum(Ssq):
                     break
         return ret
 
-    @WriteResult("result.txt","a+")
     def round_one(self,red,times,cnt=6):
 
         # random pick 7 ball N times, to see if whether the ball we wanted in it
@@ -76,8 +75,23 @@ class RandomNum(Ssq):
         return self.cross_set(self.random_round(times,cnt),
                                  self.random_round(times,cnt))
 
+
     @WriteResult("result.txt","a+")
-    def run_nice(self,times,cnt=6):
+    def run_nice_random(self,red, times,cnt=6):
+        res = self.random_round(red,times)
+        res = [str(i) for i in res]
+        return json.dumps({
+            "seq":len(self.data),
+            "type":"RANDOM_ROUND",
+            "qc":self.date_of_qc(len(self.data)-1),
+            "start":time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+            "result":res,
+            "length":times,
+            "end":time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        })
+
+    @WriteResult("result.txt","a+")
+    def run_nice_cross(self,times,cnt=6):
         # API data struct
         #   seq : the sequence of Number
         # start : the start time of running this search
@@ -86,6 +100,7 @@ class RandomNum(Ssq):
         res = self.round_two(times,cnt)
         return json.dumps({
             "seq":len(self.data),
+            "type":"RANDOM_CROSS",
             "qc":self.date_of_qc(len(self.data)-1),
             "start":time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
             "result":res,
@@ -94,22 +109,20 @@ class RandomNum(Ssq):
         })
 
 if __name__ == "__main__":
-    import sys
     rnd = RandomNum()
-    times = 15000
-    lines = 6
-    arg = ""
-    if len(sys.argv)<2:
+    times,lines = 15000,6
+    arg = sys.argv
+    if len(arg)<2:
         rnd.log.debug("Not enough argument %s"%sys.argv)
-    cmd = sys.argv[1]
-    if len(sys.argv) == 3:
-        arg = sys.argv[2]
-    if str(cmd).lower() == "start":
-        if arg:
-            try:
-                times = int(arg)
-            except:
-                pass
-        rnd.run_nice(times)
+    cmd = str(arg[1]).lower()
+    if len(arg) == 3:
+        try:
+            times = int(arg[2])
+        except:
+            print "Error param:%s"%arg
+    if cmd == "cross":
+        rnd.run_nice_cross(times)
+    elif cmd == "random":
+        rnd.run_nice_random(times)
     else:
         rnd.log.debug("CMD error : %s %s"%(cmd,arg))

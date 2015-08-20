@@ -36,7 +36,7 @@ public class NiceWorker{
             }
             @Override
             public void run() {
-                String cmd = "python randpicker.py start";
+                String cmd = "python randpicker.py cross";
                 log.info("SSQ Thread: " + cmd + " FilePath:" + Paths.get(".").toAbsolutePath().toString());
                 BufferedReader b = null;
                 try {

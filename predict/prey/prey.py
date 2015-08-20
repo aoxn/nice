@@ -41,6 +41,6 @@ if __name__=="__main__":
     rs = Preyer().load()
     print len(rs)
     for r in rs:
-        print r["seq"],len(r["result"]),r["ball"],r["cnt"]
+        print r["seq"],r["type"],len(r["result"]),r["ball"],r["cnt"]
     print "DONE!"
 
