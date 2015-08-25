@@ -31,7 +31,7 @@ class Preyer(Ssq):
     def count_number(self,res_set,ball):
         t4,t5,t6 = 0, 0, 0
         for item in res_set.get("result",[]):
-            t_len = self.intersection(item,ball)
+            t_len = len(self.intersection(eval(item),ball))
             if t_len == 4:
                 t4 += 1
             if t_len == 5:
