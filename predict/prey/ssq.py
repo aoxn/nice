@@ -33,8 +33,9 @@ class Ssq:
             self.data =  self.load_data()
 
     def retrieve_ssq_file(self):
-        if not os.path.isfile(os.path.abspath(self.ssq_file)):
-            urllib.urlretrieve(self.ssq_url, self.ssq_file)
+        if os.path.isfile(os.path.abspath(self.ssq_file)):
+            os.remove(os.path.abspath(self.ssq_file))
+        urllib.urlretrieve(self.ssq_url, self.ssq_file)
         return
 
     def load_data(self):
@@ -55,6 +56,9 @@ class Ssq:
 
     def blue_ball_row(self, idx):
         return [self.data[idx]['b1']]
+
+    def date_of_qc(self,qc):
+        return str(self.data[qc]['date'])
 
     def sort_list_result(self, fq, target=0, iv=False):
         """

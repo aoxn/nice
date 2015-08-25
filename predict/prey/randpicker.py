@@ -3,8 +3,7 @@
 
 __author__ = 'spacex'
 
-import random,json,time,numpy as np
-import itertools as itto
+import random,json,time
 from ssq import Ssq
 
 class WriteResult(object):
@@ -24,7 +23,9 @@ class WriteResult(object):
         return wrapper
 
 class RandomNum(Ssq):
+
     CROSS_LENGTH = 6
+
     def __init__(self):
         Ssq.__init__(self)
 
@@ -56,7 +57,8 @@ class RandomNum(Ssq):
 
     @WriteResult("result.txt","a+")
     def round_one(self,red,times,cnt=6):
-        #random pick 7 ball N times, to see if whether the ball we wanted in it
+
+        # random pick 7 ball N times, to see if whether the ball we wanted in it
         ret = []
         fi = self.random_round(times,cnt)
         red = self.red_ball_row(red)
@@ -81,10 +83,13 @@ class RandomNum(Ssq):
         # start : the start time of running this search
         #   end : the finish time of this search
         # result: the result of this search
+        res = self.round_two(times,cnt)
         return json.dumps({
             "seq":len(self.data),
+            "qc":self.date_of_qc(len(self.data)-1),
             "start":time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-            "result":self.round_two(times,cnt),
+            "result":res,
+            "length":len(res),
             "end":time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         })
 
