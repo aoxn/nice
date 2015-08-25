@@ -77,8 +77,8 @@ class RandomNum(Ssq):
 
 
     @WriteResult("result.txt","a+")
-    def run_nice_random(self,red, times,cnt=6):
-        res = self.random_round(red,times)
+    def run_nice_random(self,times,cnt=6):
+        res = self.random_round(times)
         res = [str(i) for i in res]
         return json.dumps({
             "seq":len(self.data),

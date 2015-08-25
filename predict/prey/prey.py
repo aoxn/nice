@@ -22,6 +22,7 @@ class Preyer(Ssq):
                     self.log.error("Json load Error.. %s"%res)
                 curr = int(res.get("seq",-1))
                 if curr >= d_len:
+                    self.log.debug("the latest number, skip...")
                     continue
                 res['ball'] = self.red_ball_row(curr)
                 res['cnt']  = self.count_number(res,res["ball"])
