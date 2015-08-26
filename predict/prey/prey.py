@@ -32,17 +32,15 @@ class Preyer(Ssq):
         t4,t5,t6 = 0, 0, 0
         for item in res_set.get("result",[]):
             t_len = len(self.intersection(eval(item),ball))
-            if t_len == 4:
-                t4 += 1
-            if t_len == 5:
-                t5 += 1
-            if t_len == 6:
-                t6 += 1
+            t4 += 1 if t_len == 4 else 0
+            t5 += 1 if t_len == 4 else 0
+            t6 += 1 if t_len == 4 else 0
         return t4,t5,t6
 
 if __name__=="__main__":
     rs = Preyer().load()
     print len(rs)
     for r in rs:
-        print r["seq"],r["ball"],r["cnt"]
+        print r["seq"],len(r["result"]),r["ball"],r["cnt"]
     print "DONE!"
+
