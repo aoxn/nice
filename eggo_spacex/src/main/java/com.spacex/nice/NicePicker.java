@@ -104,7 +104,7 @@ public class NicePicker {
                 return "ERROR:"+msg;
             }
             log.debug("CMD execute finish...");
-            r =new BufferedReader(new InputStreamReader(p.getErrorStream()));
+            r =new BufferedReader(new InputStreamReader(p.getInputStream()));
             while ((tmp = r.readLine()) != null) {
                 res.append(tmp);
             }
