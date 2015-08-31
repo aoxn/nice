@@ -16,6 +16,8 @@ import java.util.stream.Stream;
  * Created by space on 2015/8/16.
  */
 public class NiceWorker{
+    public static String crossTimes= "30000";
+    public static String randomTimes= "30000";
     final Log log = LogFactory.getLog(getClass());
     long DELAY  = 5*1000;
     long PERIOD = 4*60*60*1000;

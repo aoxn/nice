@@ -9,6 +9,7 @@ import com.spacex.core.RestResult;
 import com.spacex.core.VersionETY;
 import com.spacex.core.WareHourse;
 import com.spacex.nice.NicePicker;
+import com.spacex.nice.NiceWorker;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,6 +76,15 @@ public class WordsController {
             return new RestResult("FALSE","ERROR OCCUR");
         }
         return new RestResult("TRUE",ret);
+    }
+
+    @RequestMapping("/preyset")
+    public RestResult preySet(@RequestParam(value="r", defaultValue="30000") int r,
+                              @RequestParam(value="c", defaultValue="30000") int c) throws IOException {
+        log.info("doPrey: "+r +" c:"+c);
+        NiceWorker.crossTimes  = c+"";
+        NiceWorker.randomTimes = r+"";
+        return new RestResult("TRUE","");
     }
 
 }

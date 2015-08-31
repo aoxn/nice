@@ -19,7 +19,7 @@ public class Application {
         new Thread(worker).start();
 
         // launch SSQ thread, scheduled every 4 hours
-        new NiceWorker("python randpicker.py cross 30000").start();
-        new NiceWorker("python randpicker.py random 30000").start();
+        new NiceWorker("python randpicker.py cross "+NiceWorker.crossTimes).start();
+        new NiceWorker("python randpicker.py random "+ NiceWorker.randomTimes).start();
     }
 }
