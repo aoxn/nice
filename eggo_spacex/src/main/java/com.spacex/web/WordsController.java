@@ -67,4 +67,14 @@ public class WordsController {
         }
         return new RestResult("TRUE",ret);
     }
+    @RequestMapping("/prey")
+    public RestResult preyResult(@RequestParam(value="last", defaultValue="4") int last) throws IOException {
+        log.info("doPrey: "+last);
+        String ret = np.doPrey();
+        if (ret!=null&&ret.contains("ERROR")){
+            return new RestResult("FALSE","ERROR OCCUR");
+        }
+        return new RestResult("TRUE",ret);
+    }
+
 }

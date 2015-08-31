@@ -3,9 +3,7 @@ package com.spacex.nice;
 import com.spacex.core.PredictAPI;
 import org.apache.commons.logging.Log;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.io.*;
 import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -51,6 +49,8 @@ public class NicePicker {
                     PredictAPI pre = toPredicAPI(s);
                     if (pre == null)
                         return;
+                    if ("RANDOM_ROUND".equals(pre.getType().toUpperCase()))
+                        return;
                     if (!dateFilter(pre.getStart()))
                         return;
                     res.add(pre);
@@ -87,8 +87,45 @@ public class NicePicker {
         //return new Gson().toJson(pre);
     }
 
-
-
+    public String doPrey(){
+        String cmd = "python prey.py",tmp="";
+        StringBuilder res = new StringBuilder("");
+        BufferedReader b = null,r = null;
+        try {
+            Process p = Runtime.getRuntime().exec(cmd);
+            int status =p.waitFor();
+            b =new BufferedReader(new InputStreamReader(p.getErrorStream()));
+            log.info("Exit status : "+status);
+            if (status!=0){
+                String line,msg="";
+                while ((line = b.readLine()) != null)
+                    msg+=line+"\n";
+                log.error("Fail to CALL CMD: "+cmd +" "+msg);
+                return "ERROR:"+msg;
+            }
+            log.debug("CMD execute finish...");
+            r =new BufferedReader(new InputStreamReader(p.getErrorStream()));
+            while ((tmp = r.readLine()) != null) {
+                res.append(tmp);
+            }
+            return res.toString();
+        }catch (InterruptedException|IOException ex) {
+            ex.printStackTrace();
+        }finally {
+            close(b);
+            close(r);
+        }
+        return "ERROR";
+    }
+    void close(Reader b ){
+        if (b!=null){
+            try {
+                b.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
     public void main(String[] args){
         List<PredictAPI> res = new NicePicker().readResult();
         System.out.println(res.size());

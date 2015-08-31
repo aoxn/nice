@@ -40,10 +40,10 @@ public class NiceWorker{
             }
             @Override
             public void run() {
-                log.info("SSQ Thread: " + this.cmd + " FilePath:" + Paths.get(".").toAbsolutePath().toString());
+                log.info("SSQ Thread: " + cmd + " FilePath:" + Paths.get(".").toAbsolutePath().toString());
                 BufferedReader b = null;
                 try {
-                    Process p = Runtime.getRuntime().exec(this.cmd);
+                    Process p = Runtime.getRuntime().exec(cmd);
                     int status =p.waitFor();
                     b =new BufferedReader(new InputStreamReader(p.getErrorStream()));
                     log.info("Exit status : "+status);
@@ -51,7 +51,7 @@ public class NiceWorker{
                         String line,msg="";
                         while ((line = b.readLine()) != null)
                             msg+=line+"\n";
-                        log.error("Fail to CALL CMD: "+this.cmd +" "+msg);
+                        log.error("Fail to CALL CMD: "+cmd +" "+msg);
                     }
                 }catch (InterruptedException|IOException ex) {
                     ex.printStackTrace();
@@ -65,6 +65,6 @@ public class NiceWorker{
     }
 
     public void main(String[] args){
-        new NiceWorker().start();
+        new NiceWorker(cmd).start();
     }
 }
