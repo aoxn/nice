@@ -90,11 +90,11 @@ class Matrix(Ssq):
                     for d in a3:
                         for e in a4:
                             for f in a5:
-                                a.append(b)
-                                a.append(c)
-                                a.append(d)
-                                a.append(e)
-                                a.append(f)
+                                a.extend(b)
+                                a.extend(c)
+                                a.extend(d)
+                                a.extend(e)
+                                a.extend(f)
                                 if sum(a)==6:
                                     man.append(a)
         print "LEN: ",len(man)
