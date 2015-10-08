@@ -83,6 +83,24 @@ class Matrix(Ssq):
         a5 = self.cut(re, 5)
         for x in range(len(a0)):
             print a0[x],a1[x],a2[x],a3[x],a4[x],a5[x]
+        man = []
+        for a in a0:
+            for b in a1:
+                for c in a2:
+                    for d in a3:
+                        for e in a4:
+                            for f in a5:
+                                a.append(b)
+                                a.append(c)
+                                a.append(d)
+                                a.append(e)
+                                a.append(f)
+                                if sum(a)==6:
+                                    man.append(a)
+        print "LEN: ",len(man)
+        print man
+
+
 
 if __name__ == "__main__":
     rnd = Matrix(39)
