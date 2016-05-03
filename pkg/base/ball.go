@@ -13,6 +13,10 @@ import (
 	"fmt"
 )
 
+const (
+	 K3 = "11:11:11"
+	 K6 = "6:5:6:5:6:5"
+)
 
 type Ball struct {
 	//publish date
@@ -26,21 +30,37 @@ type Ball struct {
 
 	// Blue Balls
 	Blue      int
+
 	Attr      Attribute
 }
 
 
 type Attribute struct {
-	K3		string
-	K6 		string
-	Hole    MaxHole
+	ParKey	  map[string]*Partition
+	Hole      MaxHole
+	AccFreq   []int
+}
+
+type Partition struct {
+	Key 	  string
+	Last   	  int
+	Total     int
+	Avg       int
+	Next      int
+	Std       float64
+	AccStd    float64
 }
 
 type MaxHole struct {
-	Start 	int
-	End 	int
-	Middle 	int
-	Len     int
+	Start 	  int
+	End 	  int
+	Middle 	  int
+	Len       int
+}
+
+type Pattern struct {
+	Pat       int
+	Cnt       int
 }
 
 type Bucket struct {
@@ -65,31 +85,88 @@ func (bkt *Bucket) BlueBall(idx int) int{
 
 func (bkt *Bucket) NicePrint(){
 	for _,b := range bkt.Balls{
-		fmt.Printf("%+v\n",b)
+		fmt.Println(b)
 	}
 }
 
-func (b *Ball) keyPartition(pat int)string{
-	secs := int(math.Ceil(float64(33)/float64(pat)))
-	m := make(map[int]int)
-	for i:=0;i<secs;i++{
-		m[i] = 0
+//func (b *Ball) keyPartition(pat int)string{
+//	secs := int(math.Ceil(float64(33)/float64(pat)))
+//	m := make(map[int]int)
+//	for i:=0;i<secs;i++{
+//		m[i] = 0
+//	}
+//	for _,i := range b.Reds{
+//		x := (i-1)/pat
+//		m[x] = m[x] +1
+//	}
+//	var rs = ""
+//	for i:=0;i<secs;i++{
+//		rs += fmt.Sprintf("%d-",m[i])
+//		//fmt.Println(fmt.Sprintf("%d:",m[i]))
+//	}
+//
+//	return rs[0:len(rs)-1]
+//}
+
+func (b *Ball) KeyPartition(pat string) string{
+	var pts []Pattern
+	s := strings.Split(pat,":")
+	for _,v := range s{
+		if v == ":"{
+			continue
+		}
+		i,_ := strconv.Atoi(v)
+		pts = append(pts,Pattern{Pat:i})
 	}
-	for _,i := range b.Reds{
-		x := (i-1)/pat
-		m[x] = m[x] +1
+	for _,v := range b.Reds {
+		rs := v
+		for j,p := range pts {
+			rs = rs - p.Pat
+			if rs <= 0 {
+				pts[j].Cnt += 1
+				break
+			}
+		}
 	}
-	var rs = ""
-	for i:=0;i<secs;i++{
-		rs += fmt.Sprintf("%d-",m[i])
-		//fmt.Println(fmt.Sprintf("%d:",m[i]))
+	var rts string = ""
+	for _,v := range pts {
+		rts += fmt.Sprintf("%d-",v.Cnt)
 	}
-	return rs[0:len(rs)-1]
+	return rts[0:len(rts)-1]
+}
+
+func (b *Ball) PartitionGroup(balls []Ball,pat string) *Partition{
+	var cnt,total,found,accstd = 1,1,false,0.0
+	kNum := b.KeyPartition(pat)
+	for i:=len(balls)-1;i>=0;i--{
+		if balls[i].Attr.ParKey[pat].Key != kNum {
+			if !found {
+				cnt ++
+			}
+		}else {
+			total ++
+			if !found{
+				found = true
+				accstd = balls[i].Attr.ParKey[pat].AccStd
+			}
+		}
+	}
+	avg   := len(balls)/total
+	accstd = accstd + math.Abs(float64(avg - cnt))
+	return &Partition{
+		Key: 	kNum,
+		Last:   cnt,
+		Total: 	total,
+		Avg:   	avg,
+		Next:   2*avg - cnt,
+		AccStd: accstd,
+		Std:    accstd/float64(total),
+	}
 }
 
 func (b *Ball) maxHole() MaxHole{
 	pre,start,end,len := 0,0,0,0
-	for i := range b.Reds{
+	for _,i := range b.Reds{
 		if (i - pre) > len{
 			start,end,len = pre,i,(i - start)
 		}
@@ -98,18 +175,34 @@ func (b *Ball) maxHole() MaxHole{
 	return MaxHole{
 		Start:		start,
 		End:		end,
-		Middle:     (end-start)>>2,
+		Middle:     (end-start)>>1 + start,
 		Len:        (end-start),
 	}
 }
-
-func (b *Ball) String() string{
-
-	return fmt.Sprintf("DATE:%*s  IDX:%s  REDS:%+v   BLUE:%s  [K3: %s   K6: %s   MAXHOLE:%+v]",
-						b.Date,b.Index,b.Reds,b.Blue,b.Attr.K3,b.Attr.K6,b.Attr.Hole)
+func (b *Ball) frequency(pre Ball)[]int{
+	if pre.Attr.AccFreq == nil {
+		pre.Attr.AccFreq = make([]int,34,34)
+	}
+	freq := make([]int,34,34)
+	for idx, v := range pre.Attr.AccFreq{
+		freq[idx] = v
+	}
+	for _, i := range b.Reds{
+		freq[i] = pre.Attr.AccFreq[i] + 1
+	}
+	return freq
 }
 
-func Intersection(b1,b2 Ball) []int{
+func (b Ball) String() string{
+	var m string = ""
+	for k,v := range b.Attr.ParKey{
+		m += fmt.Sprintf("%2s %+v",k,v) +" ## "
+	}
+	return fmt.Sprintf("DATE:%s  IDX:%d  REDS:%+2v   BLUE:%2d  [PARKEY: %95s   MAXHOLE: %+2v  FREQENCY: %v]",
+						b.Date,b.Index,b.Reds,b.Blue,m[0:len(m)-3],b.Attr.Hole,b.Attr.AccFreq)
+}
+
+func (bkt *Bucket) Intersection(b1,b2 Ball) []int{
 	var rt []int
 	for i,j:=0,0;i<len(b1.Reds)&&j<len(b2.Reds);{
 		if b1.Reds[i] < b2.Reds[j]{
@@ -152,12 +245,18 @@ func LoadBucket() *Bucket {
 		}
 		sort.Ints(ball.Reds)
 
-		ball.Attr = Attribute{
-			K3:   	ball.keyPartition(11),
-			K6: 	ball.keyPartition(6),
-			Hole:	ball.maxHole(),
+		pre := Ball{}
+		if len(balls)>0{
+			pre = balls[len(balls)-1]
 		}
-
+		ball.Attr = Attribute{
+			ParKey:map[string]*Partition{
+				K3:ball.PartitionGroup(balls,K3),
+				K6:ball.PartitionGroup(balls,K6),
+			},
+			Hole:	 ball.maxHole(),
+			AccFreq: ball.frequency(pre),
+		}
 		balls = append(balls,ball)
 		return
 	})
