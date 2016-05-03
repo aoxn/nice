@@ -4,13 +4,13 @@ import (
 	"github.com/spacexnice/nice/pkg/util"
 	"os"
 	"bufio"
-	"k8s.io/kubernetes/Godeps/_workspace/src/github.com/golang/glog"
 	"io"
 	"strings"
 	"strconv"
 	"sort"
 	"math"
 	"fmt"
+    "github.com/golang/glog"
 )
 
 const (

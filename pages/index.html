@@ -1,0 +1,98 @@
+{{define "index"}}
+{{template "header" .}}
+
+<div class="main">
+    <div class="container">
+        <ol class="breadcrumb">
+            <li><a href="/">项目列表</a></li>
+            <li class="active"><a href="#"><strong>[ 2016-05-07 12:11:10 ]</strong></a></li>
+            <li class="active">版本列表</li>
+        </ol>
+
+        <div id="accord" class="panel-group">
+
+            {{range $idx,$item := .balls}}
+        <div class="panel panel-success">
+            <div class="panel-heading">
+                INDEX： <strong>[20160503]</strong>
+                <a class="pull-right" data-toggle="collapse" data-parent="#accord-{{$idx}}12" href="#accord-{{$idx}}">预测值 <i
+                        class="glyphicon glyphicon-collapse-down"></i></a>
+                <label class="pull-right">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
+                <!--<a id="dmark-{{$idx}}" name="dmark-{{$idx}}" class="pull-right" href="#">日志信息</a>-->
+            </div>
+
+            <div id="accord-{{$idx}}" class="panel-collapse collapse">
+                <div class="panel-body">
+                    <form role="form" id="descform-{{$idx}}" method="post" name="descform-{{$idx}}"
+                          action="#">
+                        <div class="row ">
+                            <div class="hidden-xs col-sm-10 list-inline">
+                                <ul class="nav nav-pills" role="tablist">
+                                    <li role="presentation"><a><span class="badge badge-important">A</span></a></li>
+                                    <li role="presentation"><a><span class="badge badge-important">B</span></a></li>
+                                    <li role="presentation"><a><span class="badge badge-important">C</span></a></li>
+                                    <li role="presentation"><a><span class="badge badge-important">D</span></a></li>
+                                    <li role="presentation"><a><span class="badge badge-important">E</span></a></li>
+                                    <li role="presentation"><a><span class="badge badge-success">F</span></a></li>
+                                </ul>
+                            </div>
+                            <div class="hidden-xs col-sm-2 list-inline text-right">
+                                <a href="#detail" role="button" class="btn" data-toggle="modal">详细日志信息</a>
+                            </div>
+                        </div>
+                        <div class="page-header">
+                            <h6></h6>
+                        </div>
+                        <div class="popover-content">
+                            <!--<span id="content-{{$idx}}" name="content-{{$idx}}">{{$item}}</span>
+                            <div class="alert alert-warning " id="alert-{{$idx}}" >
+                                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                <strong>警告！</strong> <span id="alert-info-{{$idx}}">daiyaos</span>
+                            </div>
+                            -->
+
+                            <div class="editable" data-toggle="tooltip" title="单击编辑！然后保存" id="txtbody-{{$item}}" name="txtbody-{{$item}}"><p>&nbsp;&nbsp;&nbsp;&nbsp;
+                                [摘要]2016斯诺克世锦赛落下帷幕，在丁俊晖和塞尔比的冠军争夺战中，丁俊晖开局0-6落后，随后尽管数次将分差缩小到一局，但最终14-18不敌塞尔比。塞尔比继2014年后，第二次夺得世锦赛冠军。
+                            </p></div>
+
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+
+            {{end}}
+        </div>
+
+
+        <!-- 对话框 -->
+        <div id="detail" class="modal fade" tabindex="-1" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">详细日志</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;tcmalloc就是一个内存分配器，管理堆内存，主要影响malloc和free，用于降低频繁分配、释放内存造成的性能损耗，并且有效地控制内存碎片。glibc中的内存分配器是ptmalloc2，tcmalloc号称要比它快。一次malloc和free操作，ptmalloc需要300ns，而tcmalloc只要50ns。同时tcmalloc也优化了小对象的存储，需要更少的空间。tcmalloc特别对多线程做了优化，对于小对象的分配基本上是不存在锁竞争，而大对象使用了细粒度、高效的自旋锁（spinlock）。分配给线程的本地缓存，在长时间空闲的情况下会被回收，供其他线程使用，这样提高了在多线程情况下的内存利用率，不会浪费内存，而这一点ptmalloc2是做不到的。&hellip;</p>
+                        <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;tcmalloc区别的对待大、小对象。它为每个线程分配了一个线程局部的cache，线程需要的小对象都是在其cache中分配的，由于是thread local的，所以基本上是无锁操作（在cache不够，需要增加内存时，会加锁）。同时，tcmalloc维护了进程级别的cache，所有的大对象都在这个cache中分配，由于多个线程的大对象的分配都从这个cache进行，所以必须加锁访问。在实际的程序中，小对象分配的频率要远远高于大对象，通过这种方式（小对象无锁分配，大对象加锁分配）可以提升整体性能。&hellip;</p>
+                        <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;线程级别cache和进程级别cache实际上就是一个多级的空闲块列表（Free List）。一个Free List以大小为k bytes倍数的空闲块进行分配，包含n个链表，每个链表存放大小为nk bytes的空闲块。在tcmalloc中，<=32KB的对象被称作是小对象，>32KB的是大对象。在小对象中，<=1024bytes的对象以8n bytes分配，1025 size 32KB的对象以128n bytes大小分配，比如：要分配20bytes则返回的空闲块大小是24bytes的，这样在=1024的情况下最多浪费7bytes，>1025则浪费127bytes。而大对象是以页大小4KB进行对齐的，最多会浪费4KB - 1 bytes。下图就是一个基本的free list的示意图：&hellip;</p>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
+                    </div>
+                </div>
+                <!-- /.modal-content -->
+            </div>
+            <!-- /.modal-dialog -->
+        </div>
+
+</div>
+<script src='https://cdn.tinymce.com/4/tinymce.min.js'></script>
+<script src="/js/jquery-1.11.3.min.js"></script>
+
+{{template "footer" .}}
+{{end}}
