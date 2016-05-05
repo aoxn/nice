@@ -10,8 +10,8 @@
         </ol>
 
         <div id="accord" class="panel-group">
-
-            {{range $idx,$item := .balls}}
+            {{if .error eq ""}}
+            {{range $idx,$item := .results}}
         <div class="panel panel-success">
             <div class="panel-heading">
                 INDEX： <strong>[20160503]</strong>
@@ -63,7 +63,11 @@
                 </div>
             </div>
         </div>
-
+            {{end}}
+            {{else}}
+            <div class="container">
+                <div class="alert alert-danger" role="alert">Error: {{.error}}</div>
+            </div>
             {{end}}
         </div>
 
