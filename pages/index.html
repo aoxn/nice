@@ -32,14 +32,11 @@
                         <div class="row ">
                             <div class="hidden-xs col-sm-10 list-inline">
                                 <ul class="nav nav-pills" role="tablist">
-                                    <li role="presentation"><a><span class="badge badge-important">A</span></a></li>
-                                    <li role="presentation"><a><span class="badge badge-important">B</span></a></li>
-                                    <li role="presentation"><a><span class="badge badge-important">C</span></a></li>
-                                    <li role="presentation"><a><span class="badge badge-important">D</span></a></li>
-                                    <li role="presentation"><a><span class="badge badge-important">E</span></a></li>
-                                    <li role="presentation"><a><span class="badge badge-success">F</span></a></li>
+                                    {{range $r := $item.Ball.Reds}}
+                                    <li role="presentation"><a><span class="badge badge-important">{{$r}}</span></a></li>
+                                    {{end}}
                                     <li><a>|</a></li>
-                                    <li role="presentation"><a><span class="badge badge-success">F</span></a></li>
+                                    <li role="presentation"><a><span class="badge badge-success">{{$item.Ball.Blue}}</span></a></li>
                                 </ul>
                             </div>
                             <div class="hidden-xs col-sm-2 list-inline text-right">
@@ -136,7 +133,6 @@
         </div>
 
 </div>
-<script src='https://cdn.tinymce.com/4/tinymce.min.js'></script>
 <script src="/js/jquery-1.11.3.min.js"></script>
 
 {{template "footer" .}}

@@ -67,7 +67,7 @@ func (w *Worker) Exist(idx int)bool {
     r := &Result{IDX:idx}
     err := w.DB.Where(r).Find(r).Error;
     if err == nil{
-        glog.Infof("INDEX:[%s] Exist!\n",idx)
+        glog.Infof("INDEX:[%d] Exist!\n",idx)
         return true
     }
     return false
