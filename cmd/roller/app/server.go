@@ -8,6 +8,7 @@ import (
     "github.com/gin-gonic/gin"
     "github.com/spacexnice/nice/pkg/util"
     "github.com/spacexnice/nice/pkg/web"
+    "github.com/spacexnice/nice/pkg/algorithm"
 )
 
 
@@ -32,17 +33,21 @@ type NiceServer struct {
     DB         * gorm.DB
     eng        * gin.Engine
     Handler    * web.WebHandler
+
+    Worker     * algorithm.Worker
 }
 
 func NewNiceServer() *NiceServer {
     cnf := createConfig()
     db  := util.OpenInit(cnf.DataPath)
+    db.AutoMigrate(&algorithm.Result{})
 
     return &NiceServer{
         DB:      db,
         Cnf:     cnf,
         eng:     gin.Default(),
         Handler: web.NewWebHandler(db),
+        Worker:  algorithm.NewWorker(db),
     }
 }
 
@@ -94,6 +99,7 @@ func (s *NiceServer) route(){
 
 
 func (s *NiceServer) Run(){
+    s.Worker.Run()
     s.route()
     s.eng.Run(":8000")
 }

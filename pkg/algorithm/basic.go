@@ -1,16 +1,23 @@
-package algrithem
+package algorithm
 
 import (
 	"github.com/spacexnice/nice/pkg/base"
 	"sort"
 	"fmt"
 	"math"
+    "github.com/jfrazelle/go/canonical/json"
 )
 
 type GroupPredicator struct {
 	Bucket 		*base.Bucket
 }
 
+type Result struct {
+    IDX         int
+
+    K3          ScoreList
+    K3S         string `gorm:"size:65535"`
+}
 type Score struct {
 	Key 		string
 	Rank    	int
@@ -55,6 +62,14 @@ func (l ScoreList) NicePrint(){
 		fmt.Println(v)
 	}
 	return
+}
+
+func (l ScoreList) ToJson() string{
+    b,e := json.Marshal(l)
+    if e != nil {
+        panic(e)
+    }
+    return string(b)
 }
 
 func NewPredicator(bucket *base.Bucket) *GroupPredicator{
