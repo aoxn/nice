@@ -3,9 +3,9 @@ package algorithm
 import (
     "github.com/jinzhu/gorm"
     "github.com/spacexnice/nice/pkg/base"
-    "github.com/spacexnice/ctlplane/pro/util"
     "time"
     "github.com/golang/glog"
+    "github.com/spacexnice/nice/pkg/util"
 )
 
 type Worker struct {

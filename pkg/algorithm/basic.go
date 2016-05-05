@@ -43,7 +43,7 @@ func (l ScoreList) Len()int{
 }
 
 func (l ScoreList) Less(i,j int)bool{
-	if l[i].ScoreExp <= l[j].ScoreExp{
+	if l[i].ScoreExp >= l[j].ScoreExp{
 		return true
 	}
 	return false
@@ -115,12 +115,22 @@ func (p *GroupPredicator) predicate(idx int,key string) ScoreList{
 			Ball:	p.Bucket.Balls[i],
 		}
 	}
-	var ss []*Score
+	var ss,res []*Score
 	for _,v := range rt{
 		ss = append(ss,v)
 	}
 	sort.Sort(ScoreList(ss))
-	return ss
+	for i,v := range ss {
+		if v.FixStd >= 10{
+			//过滤掉修正方差大于10的
+			continue
+		}
+		if i <= 4 {
+			//只取前4个
+			res=append(res,v)
+		}
+	}
+	return res
 }
 
 func (p *GroupPredicator) Show(idx int){

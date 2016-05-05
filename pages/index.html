@@ -57,12 +57,13 @@
                             </div>
                             -->
 
-                            <div class="editable" data-toggle="tooltip" title="浏览" id="txtbody-{{$item}}">
+                            <div class="editable" data-toggle="tooltip" title="浏览" id="txtbody-{{$idx}}">
                                 <table class="table table-bordered">
                                     <thead>
                                     <tr>
                                         <th>Num</th>
                                         <th>预测分组</th>
+                                        <th>排序指数</th>
                                         <th>修正方差</th>
                                         <th>标准差</th>
                                         <th>分数</th>
@@ -73,6 +74,7 @@
                                     <tr>
                                         <th scope="row">{{$k}}</th>
                                         <td>{{$v.Key}}</td>
+                                        <td>{{$v.ScoreExp}}</td>
                                         <td>{{$v.FixStd}}</td>
                                         <td>{{$v.Std}}</td>
                                         <td>{{$v.Rank}}</td>
