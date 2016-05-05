@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-REPO=61.160.36.122:8080
+REPO=133.130.96.46:5000
 PROJECT=spacexnice
 APP=nice
 VERSION=1.0.0
