@@ -19,5 +19,5 @@ tag:
 push:
 	docker push ${IMAGE}
 run:
-    docker run -d -p 80:8000 -e DB_DATA_PATH=/data/registry/ -e GIN_MODE=release ${IMAGE}
+	docker run -d -p 8000:8000 -v /data/registry:/data/registry -e DB_DATA_PATH=/data/registry/ -e GIN_MODE=release ${IMAGE}
 .PHONY: all

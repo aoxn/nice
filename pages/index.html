@@ -10,11 +10,15 @@
         </ol>
 
         <div id="accord" class="panel-group">
-            {{if .error eq ""}}
+            {{if .error}}
+            <div class="container">
+                <div class="alert alert-danger" role="alert">Error: {{.error}}</div>
+            </div>
+            {{else}}
             {{range $idx,$item := .results}}
         <div class="panel panel-success">
             <div class="panel-heading">
-                INDEX： <strong>[20160503]</strong>
+                INDEX： <strong>[{{$item.IDX}}]</strong>
                 <a class="pull-right" data-toggle="collapse" data-parent="#accord-{{$idx}}12" href="#accord-{{$idx}}">预测值 <i
                         class="glyphicon glyphicon-collapse-down"></i></a>
                 <label class="pull-right">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
@@ -53,10 +57,47 @@
                             </div>
                             -->
 
-                            <div class="editable" data-toggle="tooltip" title="单击编辑！然后保存" id="txtbody-{{$item}}" name="txtbody-{{$item}}"><p>&nbsp;&nbsp;&nbsp;&nbsp;
-                                [摘要]2016斯诺克世锦赛落下帷幕，在丁俊晖和塞尔比的冠军争夺战中，丁俊晖开局0-6落后，随后尽管数次将分差缩小到一局，但最终14-18不敌塞尔比。塞尔比继2014年后，第二次夺得世锦赛冠军。
-                            </p></div>
+                            <div class="editable" data-toggle="tooltip" title="浏览" id="txtbody-{{$item}}">
+                                <table class="table table-bordered">
+                                    <thead>
+                                    <tr>
+                                        <th>Num</th>
+                                        <th>预测分组</th>
+                                        <th>修正方差</th>
+                                        <th>标准差</th>
+                                        <th>分数</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {{range $k,$v := $item.K3}}
+                                    <tr>
+                                        <th scope="row">{{$k}}</th>
+                                        <td>{{$v.Key}}</td>
+                                        <td>{{$v.FixStd}}</td>
+                                        <td>{{$v.Std}}</td>
+                                        <td>{{$v.Rank}}</td>
+                                    </tr>
+                                    {{end}}
+                                    </tbody>
+                                </table>
+                            </div>
 
+                        </div>
+
+                        <div class="page-header">
+                            <h6></h6>
+                            <a class="pull-right" data-toggle="collapse" data-parent="#accord-{{$idx}}12" href="#layer-{{$idx}}">展开BALLS <i
+                                    class="glyphicon glyphicon-collapse-down"></i></a>
+                        </div>
+                        <div id="layer-{{$idx}}" class="row panel-collapse collapse" >
+                            <div class=" col-sm-3 list-group ">
+                            </div>
+                            <div class=" col-sm-6 list-group ">
+                                <a href="#" class="list-group-item truncate bg-gray" data-toggle="tooltip" data-placement="left" title="单击编辑！然后保存"><span class="badge">14</span>Dapibus ac facilisis in</a>
+                                <a href="#" class="list-group-item truncate list-group-item-info" data-placement="left" data-toggle="tooltip" title="单击编辑！保存"><span class="badge">14</span>Cras sit amet nibh libero</a>
+                                </div>
+                            <div class=" col-sm-3 list-group ">
+                            </div>
                         </div>
 
                     </form>
@@ -64,10 +105,6 @@
             </div>
         </div>
             {{end}}
-            {{else}}
-            <div class="container">
-                <div class="alert alert-danger" role="alert">Error: {{.error}}</div>
-            </div>
             {{end}}
         </div>
 

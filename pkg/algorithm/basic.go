@@ -14,9 +14,9 @@ type GroupPredicator struct {
 
 type Result struct {
     IDX         int
-
-    K3          ScoreList
-    K3S         string `gorm:"size:65535"`
+    Ball        base.Ball `gorm:"-"`
+    K3          ScoreList `gorm:"-"`
+    K3S         string    `gorm:"size:65535"`
 }
 type Score struct {
 	Key 		string
@@ -72,6 +72,14 @@ func (l ScoreList) ToJson() string{
     return string(b)
 }
 
+func (r *Result) LoadJson(){
+    l := ScoreList{}
+    e := json.Unmarshal([]byte(r.K3S),&l)
+    if e != nil {
+        panic(e)
+    }
+    r.K3 = l
+}
 func NewPredicator(bucket *base.Bucket) *GroupPredicator{
 
 	return &GroupPredicator{

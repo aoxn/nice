@@ -1,14 +1,15 @@
 FROM ubuntu:14.04
 
-# °²×°½ø³Ì¿ÉÖ´ĞĞÎÄ¼ş£¨ÓÉ myapp.go ±àÒë£©
+# å®‰è£…è¿›ç¨‹å¯æ‰§è¡Œæ–‡ä»¶ï¼ˆç”± myapp.go ç¼–è¯‘ï¼‰
 COPY nice /app/
 COPY js /app/js
 COPY pages /app/pages
 COPY fonts /app/fonts
 COPY css /app/css
 COPY entrypoint.sh /app/
+RUN chmod +x /app/entrypoint.sh
 
-# ÉèÖÃ×Ô¶¯À­Æğ½ø³Ì
+# è®¾ç½®è‡ªåŠ¨æ‹‰èµ·è¿›ç¨‹
 CMD /app/entrypoint.sh
 
 # The entrypoint of lightvm will start everything

@@ -28,19 +28,22 @@ func (h * WebHandler) Index(c *gin.Context) {
         c.HTML(http.StatusOK,
             "index",
             gin.H{
-                "title":      "NICE",
+                "title":        "NICE",
                 "results" :     "",
-                "error":  fmt.Sprintf("Error occured[%s]",e.Error()),
+                "error":        fmt.Sprintf("Error occured[%s]",e.Error()),
             },
         )
         return
     }
+    for k,_ := range r{
+        r[k].LoadJson()
+    }
     c.HTML(http.StatusOK,
         "index",
         gin.H{
-            "title":      "NICE",
+            "title":       "NICE",
             "results" :    r,
-            "error":  "",
+            "error":       "",
         },
     )
 }
