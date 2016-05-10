@@ -40,7 +40,7 @@ type NiceServer struct {
 func NewNiceServer() *NiceServer {
     cnf := createConfig()
     db  := util.OpenInit(cnf.DataPath)
-    db.AutoMigrate(&algorithm.Result{})
+    db.AutoMigrate(&algorithm.Record{})
 
     return &NiceServer{
         DB:      db,
@@ -68,6 +68,7 @@ func createConfig()* Config{
 
 func (s *NiceServer) AddFlags(){
     flag.Set("logtostderr", "true")
+    flag.Parse()
 }
 func (s *NiceServer) route(){
     r := s.eng

@@ -38,7 +38,9 @@ type Ball struct {
 type Attribute struct {
 	ParKey	  map[string]*Partition
 	Hole      MaxHole
-	AccFreq   []int
+	CoRelate2 [34][34]int			`json:"-"`
+	CoRelate3 [34][34][34]int		`json:"-"`
+	AccFreq   []int					`json:"-"`
 }
 
 type Partition struct {
@@ -193,6 +195,28 @@ func (b *Ball) frequency(pre Ball)[]int{
 	return freq
 }
 
+func (b *Ball) corelation2(pre *Ball) [34][34]int {
+	coRelate2 := pre.Attr.CoRelate2
+	for _, bfirst := range b.Reds {
+		for _, bsecond := range b.Reds {
+			coRelate2[bfirst][bsecond] = pre.Attr.CoRelate2[bfirst][bsecond] + 1
+		}
+	}
+	return coRelate2
+}
+
+func (b *Ball) corelation3(pre *Ball) [34][34][34]int {
+	coRelate3 := pre.Attr.CoRelate3
+	for _, bfirst := range b.Reds {
+		for _, bsecond := range b.Reds {
+			for _, bthird := range b.Reds{
+				coRelate3[bfirst][bsecond][bthird] = pre.Attr.CoRelate3[bfirst][bsecond][bthird] + 1
+			}
+		}
+	}
+	return coRelate3
+}
+
 func (b Ball) String() string{
 	var m string = ""
 	for k,v := range b.Attr.ParKey{
@@ -256,6 +280,8 @@ func LoadBucket() *Bucket {
 			},
 			Hole:	 ball.maxHole(),
 			AccFreq: ball.frequency(pre),
+			CoRelate2: ball.corelation2(&pre),
+			CoRelate3: ball.corelation3(&pre),
 		}
 		balls = append(balls,ball)
 		return

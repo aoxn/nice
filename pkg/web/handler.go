@@ -22,8 +22,8 @@ func NewWebHandler(db * gorm.DB) * WebHandler{
 
 
 func (h * WebHandler) Index(c *gin.Context) {
-    r := []algorithm.Result{}
-    e := h.DB.Limit(15).Order("idx desc").Find(&r).Error
+    res,rec := []algorithm.Result{},[]algorithm.Record{}
+    e := h.DB.Limit(10).Order("idx desc").Find(&rec).Error
     if e != nil {
         c.HTML(http.StatusOK,
             "index",
@@ -37,19 +37,14 @@ func (h * WebHandler) Index(c *gin.Context) {
     }
     bkt := base.NewBucket(false)
     fmt.Println("xxxx:",len(bkt.Balls))
-    for k,_ := range r{
-        r[k].LoadJson()
-        if r[k].IDX >= len(bkt.Balls)-1 && k == 0 {
-            r[k].Ball = base.Ball{Reds:[]int{0,0,0,0,0,0}}
-            continue
-        }
-        r[k].Ball = bkt.Balls[r[k].IDX]
+    for k,_ := range rec{
+        res = append(res,rec[k].LoadResult())
     }
     c.HTML(http.StatusOK,
         "index",
         gin.H{
             "title":       "NICE",
-            "results" :    r,
+            "results" :    res,
             "error":       "",
         },
     )

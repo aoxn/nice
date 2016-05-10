@@ -6,19 +6,29 @@ import (
 	"fmt"
 	"math"
     "github.com/jfrazelle/go/canonical/json"
+	"github.com/golang/glog"
 )
 
 type GroupPredicator struct {
 	Bucket 		*base.Bucket
 }
 
-type Result struct {
-    IDX         int
-    Ball        base.Ball `gorm:"-"`
-    K3          ScoreList `gorm:"-"`
-    K3S         string    `gorm:"size:65535"`
+type Record struct {
+	//IDX编号从0开始算起
+	IDX         int       `gorm:"primary_key"`
+	Index       int
+	BallJson    string    `gorm:"size:4096"`
+	K3Json      string    `gorm:"size:65535"`
 }
-type Score struct {
+
+type Result struct {
+	Record      Record
+
+	Ball        base.Ball
+	K3          ScoreList
+}
+
+type KeyScore struct {
 	Key 		string
 	Rank    	int
 	// 标准差.度量期望组合的可信度
@@ -31,12 +41,12 @@ type Score struct {
 	Ball    	base.Ball
 }
 
-func (s Score) String()string{
+func (s KeyScore) String()string{
 	return fmt.Sprintf("Key:%s, Score:%4d,ScoreExponent:%10f, Std:%10f,FixStd:%10f, Ball:%s",
 		s.Key,s.Rank,s.ScoreExp,s.Std,s.FixStd,s.Ball)
 }
 
-type ScoreList []*Score
+type ScoreList []*KeyScore
 
 func (l ScoreList) Len()int{
 	return len(l)
@@ -72,14 +82,28 @@ func (l ScoreList) ToJson() string{
     return string(b)
 }
 
-func (r *Result) LoadJson(){
-    l := ScoreList{}
-    e := json.Unmarshal([]byte(r.K3S),&l)
-    if e != nil {
-        panic(e)
-    }
-    r.K3 = l
+func (rec Record) LoadResult() Result{
+	res := Result{
+		Record:  rec,
+	}
+	e := json.Unmarshal([]byte(rec.K3Json),&res.K3)
+	if e != nil {
+		panic(e)
+	}
+	res.Ball = base.Ball{Reds:[]int{0,0,0,0,0,0}}
+	fmt.Println("FFFF:",rec.BallJson)
+	if rec.BallJson == "" {
+		glog.Warningf("It seems that this is the latest Predict,which Ball is unkonw,[%d][%d]\n",rec.IDX,rec.Index)
+		return res
+	}
+	e  = json.Unmarshal([]byte(rec.BallJson),&res.Ball)
+	fmt.Println(res.Ball)
+	if e != nil{
+		fmt.Println("Could be nil:",e)
+	}
+	return res
 }
+
 func NewPredicator(bucket *base.Bucket) *GroupPredicator{
 
 	return &GroupPredicator{
@@ -97,7 +121,7 @@ func (p *GroupPredicator) PKey6(idx int)ScoreList{
 }
 
 func (p *GroupPredicator) predicate(idx int,key string) ScoreList{
-	cnt,rt := 0,make(map[string]*Score)
+	cnt,rt := 0,make(map[string]*KeyScore)
 	for i := idx - 1;i>=0;i--{
 		cnt ++
 		pk := p.Bucket.Balls[i].Attr.ParKey[key]
@@ -106,7 +130,7 @@ func (p *GroupPredicator) predicate(idx int,key string) ScoreList{
 		}
 		score  := cnt - pk.Next
 		fixStd := (math.Abs(float64(score))+float64(pk.Total) * pk.Std)/(float64(pk.Total)+1)
-		rt[pk.Key] = &Score{
+		rt[pk.Key] = &KeyScore{
 			Key:	pk.Key,
 			Std:	pk.Std,
 			FixStd: fixStd,
@@ -115,7 +139,7 @@ func (p *GroupPredicator) predicate(idx int,key string) ScoreList{
 			Ball:	p.Bucket.Balls[i],
 		}
 	}
-	var ss,res []*Score
+	var ss,res []*KeyScore
 	for _,v := range rt{
 		ss = append(ss,v)
 	}

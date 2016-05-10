@@ -18,7 +18,7 @@
             {{range $idx,$item := .results}}
         <div class="panel panel-success">
             <div class="panel-heading">
-                INDEX： <strong>[{{$item.IDX}}]</strong>
+                INDEX： <strong>[{{$item.Record.IDX}}] [{{$item.Record.Index}}]</strong>
                 <a class="pull-right" data-toggle="collapse" data-parent="#accord-{{$idx}}12" href="#accord-{{$idx}}">预测值 <i
                         class="glyphicon glyphicon-collapse-down"></i></a>
                 <label class="pull-right">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
