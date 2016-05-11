@@ -18,7 +18,7 @@
             {{range $idx,$item := .results}}
         <div class="panel panel-success">
             <div class="panel-heading">
-                INDEX： <strong>[{{$item.Record.IDX}}] [{{$item.Record.Index}}]</strong>
+                INDEX： <strong>[{{$item.Record.IDX}}] [{{$item.Record.Index}}][{{$item.Date}}]</strong>
                 <a class="pull-right" data-toggle="collapse" data-parent="#accord-{{$idx}}12" href="#accord-{{$idx}}">预测值 <i
                         class="glyphicon glyphicon-collapse-down"></i></a>
                 <label class="pull-right">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
@@ -37,6 +37,7 @@
                                     {{end}}
                                     <li><a>|</a></li>
                                     <li role="presentation"><a><span class="badge badge-success">{{$item.Ball.Blue}}</span></a></li>
+                                    <li role="presentation"><a><span class="badge badge-success">实际分组:{{$item.ParKey3}}</span></a></li>
                                 </ul>
                             </div>
                             <div class="hidden-xs col-sm-2 list-inline text-right">
@@ -89,14 +90,30 @@
                                     class="glyphicon glyphicon-collapse-down"></i></a>
                         </div>
                         <div id="layer-{{$idx}}" class="row panel-collapse collapse" >
-                            <div class=" col-sm-3 list-group ">
-                            </div>
-                            <div class=" col-sm-6 list-group ">
-                                <a href="#" class="list-group-item truncate bg-gray" data-toggle="tooltip" data-placement="left" title="单击编辑！然后保存"><span class="badge">14</span>Dapibus ac facilisis in</a>
-                                <a href="#" class="list-group-item truncate list-group-item-info" data-placement="left" data-toggle="tooltip" title="单击编辑！保存"><span class="badge">14</span>Cras sit amet nibh libero</a>
-                                </div>
-                            <div class=" col-sm-3 list-group ">
-                            </div>
+                            <table class="table table-bordered">
+                                <thead>
+                                <tr>
+                                    <th>Num</th>
+                                    <th>预测值</th>
+                                    <th>排序指数</th>
+                                    <th>修正方差</th>
+                                    <th>标准差</th>
+                                    <th>分数</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {{range $k,$v := $item.Nice}}
+                                <tr>
+                                    <th scope="row">{{$k}}</th>
+                                    <td>{{$v.Key}}</td>
+                                    <td>{{$v.ScoreExp}}</td>
+                                    <td>{{$v.FixStd}}</td>
+                                    <td>{{$v.Std}}</td>
+                                    <td>{{$v.Rank}}</td>
+                                </tr>
+                                {{end}}
+                                </tbody>
+                            </table>
                         </div>
 
                     </form>

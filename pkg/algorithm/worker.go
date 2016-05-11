@@ -32,16 +32,22 @@ func NewWorker(db * gorm.DB) *Worker{
 func (w *Worker) Run() {
     // IDX 编号从0开始算
     go util.Until(func(){
-        bkt := base.NewBucket(true)
+        bkt := base.NewBucket(false)
+
+        fmt.Println(bkt.Balls[len(bkt.Balls)-1].Attr.CoRelate1)
+
+
         //if w.Exist(len(bkt.Balls)){
         //    return
         //}
         s := w.nice(bkt)
+        p := w.nice2(bkt)
         r := Record{
             //本Record属于预测期,所以编号IDX应该为第len(bkt.Balls)
-            IDX:    len(bkt.Balls),
-            Index:  bkt.Balls[len(bkt.Balls)-1].Index + 1,
+            IDX:    bkt.NextIDX,
+            Index:  bkt.Balls[bkt.NextIDX-1].Index + 1,
             K3Json: s.ToJson(),
+            NiceJson:p.ToJson(),
         }
         w.addResult(&r)
         w.updatePreviousResult(bkt)
@@ -51,14 +57,18 @@ func (w *Worker) Run() {
 func (w *Worker) nice(bkt *base.Bucket) ScoreList{
     //return NewPredicator(bkt).PKey3(len(bkt.Balls)-1)
 
-    return NewPredicator(bkt).PKey3(len(bkt.Balls)-1)
+    return NewPartitionNicer(bkt).PKey3(bkt.NextIDX)
 }
+func (w *Worker) nice2(bkt *base.Bucket) ScoreList{
+    //return NewPredicator(bkt).PKey3(len(bkt.Balls)-1)
 
+    return NewRelateNicer(bkt).Predicate(bkt.NextIDX)
+}
 
 func (w *Worker) donice(idx int) ScoreList{
     bkt := base.NewBucket(true)
     //prd.PKey3(idx).NicePrint()
-    prd := NewPredicator(bkt)
+    prd := NewPartitionNicer(bkt)
     return prd.PKey3(idx)
 }
 
@@ -72,7 +82,7 @@ func (w *Worker) addResult(r *Record){
 
 func (w *Worker) updatePreviousResult(bkt *base.Bucket) {
     r := Record{
-        IDX:    len(bkt.Balls)-1,
+        IDX:    bkt.NextIDX - 1,
     }
     err := w.DB.First(&r).Error
     if err != nil{
@@ -82,7 +92,7 @@ func (w *Worker) updatePreviousResult(bkt *base.Bucket) {
         panic(err)
     }
     glog.Warningln("rrrr: ",r,"  PPPPPPPP:")
-    b ,e  := json.Marshal(bkt.Balls[len(bkt.Balls)-1])
+    b ,e  := json.Marshal(bkt.Balls[bkt.NextIDX - 1])
     if e != nil{
         panic(e.Error())
     }

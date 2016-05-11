@@ -6,7 +6,7 @@ import (
     "net/http"
     "fmt"
     "github.com/spacexnice/nice/pkg/algorithm"
-    "github.com/spacexnice/nice/pkg/base"
+    //"github.com/spacexnice/nice/pkg/base"
 )
 
 type WebHandler struct {
@@ -35,8 +35,8 @@ func (h * WebHandler) Index(c *gin.Context) {
         )
         return
     }
-    bkt := base.NewBucket(false)
-    fmt.Println("xxxx:",len(bkt.Balls))
+    //bkt := base.NewBucket(false)
+    //fmt.Println("xxxx:",len(bkt.Balls))
     for k,_ := range rec{
         res = append(res,rec[k].LoadResult())
     }

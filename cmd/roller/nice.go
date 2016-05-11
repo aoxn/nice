@@ -12,7 +12,7 @@ import (
 func main(){
     //bkt := base.NewBucket(false)
     //fmt.Println(bkt.Balls[len(bkt.Balls)-1].Attr.CoRelate3)
-    algorithm.NewPredicator(base.NewBucket(false))
+    algorithm.NewPartitionNicer(base.NewBucket(false))
     runtime.GOMAXPROCS(runtime.NumCPU())
     s := app.NewNiceServer()
     s.AddFlags()

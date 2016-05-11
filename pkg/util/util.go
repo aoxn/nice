@@ -8,6 +8,8 @@ import (
     "github.com/golang/glog"
     "fmt"
     _ "github.com/mattn/go-sqlite3"
+	"bytes"
+	"encoding/gob"
 )
 
 const (
@@ -52,4 +54,12 @@ func LoadFile(force bool){
 
 		io.Copy(file, res.Body)
 	}
+}
+
+func DeepCopy(dst, src interface{}) error {
+	var buf bytes.Buffer
+	if err := gob.NewEncoder(&buf).Encode(src); err != nil {
+		return err
+	}
+	return gob.NewDecoder(bytes.NewBuffer(buf.Bytes())).Decode(dst)
 }
