@@ -34,9 +34,6 @@ func (w *Worker) Run() {
     go util.Until(func(){
         bkt := base.NewBucket(false)
 
-        fmt.Println(bkt.Balls[len(bkt.Balls)-1].Attr.CoRelate1)
-
-
         //if w.Exist(len(bkt.Balls)){
         //    return
         //}

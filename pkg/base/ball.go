@@ -11,12 +11,13 @@ import (
 	"math"
 	"fmt"
     "github.com/golang/glog"
-	"k8s.io/kubernetes/third_party/golang/go/doc/testdata"
+	"encoding/json"
 )
 
 const (
 	 K3 = "11:11:11"
 	 K6 = "6:5:6:5:6:5"
+	 KEY_PREFIX = "GRP"
 )
 
 type Ball struct {
@@ -36,21 +37,13 @@ type Ball struct {
 	//kike 2  => 2
 	Policy map[string]*EstimatePolicy
 
-	Attr   *Attribute
+	Hole      MaxHole
 }
 
 type EstimatePolicy struct {
-	Key       string
+	PatKey    string
 
 	Estimates map[string]*Estimate
-}
-
-type Attribute struct {
-	ParKey    map[string]*Estimate
-	Hole      MaxHole
-	CoRelate2 *[34]*[34]Estimate            `json:"-"`
-	CoRelate3 *[34]*[34]*[34]Estimate        `json:"-"`
-	CoRelate1 *[34]Estimate                `json:"-"`
 }
 
 type Estimate struct {
@@ -64,7 +57,7 @@ type Estimate struct {
 	//被评估对象累积出现次数
 	AccCount int
 	//被评估对象的平均出现次数
-	Avg      int
+	Avg      float64
 	//被评估对象的预计下一次出现次数
 	Next     int
 
@@ -78,6 +71,51 @@ type Estimate struct {
 	//期望值
 	Expect   float64
 }
+type Group struct {
+	//like 11:11:11
+	Pattern  string
+
+	//like 2:1:3
+	Key      string
+
+	//like 1, which part of the group
+	Index    int
+
+	//Count like 2
+	Count    int
+
+	//group start num
+	Start    int
+	End      int
+
+	List     ScoreList
+}
+
+
+func NewGroups(pat,key string) *[]Group{
+	var pts *[]Group
+	pats := strings.Split(pat,":")
+	keys := strings.Split(key,":")
+	start:= 1
+	for k,v := range pats {
+		if v == ":"{
+			continue
+		}
+		i,_ := strconv.Atoi(v)
+		j,_ := strconv.Atoi(keys[k])
+		pts = append(pts,&Group{
+			Pattern: pat,
+			Key:key,
+			Index: k,
+			Count: j,
+			Start: start,
+			End: start + i,
+		})
+		start = start + i
+	}
+	return pts
+}
+
 
 type MaxHole struct {
 	Start 	  int
@@ -92,7 +130,7 @@ type Pattern struct {
 }
 
 type Bucket struct {
-	Balls 	  []Ball
+	Balls 	  []*Ball
 	NextIDX   int
 }
 
@@ -117,25 +155,6 @@ func (bkt *Bucket) NicePrint(){
 		fmt.Println(b)
 	}
 }
-
-//func (b *Ball) keyPartition(pat int)string{
-//	secs := int(math.Ceil(float64(33)/float64(pat)))
-//	m := make(map[int]int)
-//	for i:=0;i<secs;i++{
-//		m[i] = 0
-//	}
-//	for _,i := range b.Reds{
-//		x := (i-1)/pat
-//		m[x] = m[x] +1
-//	}
-//	var rs = ""
-//	for i:=0;i<secs;i++{
-//		rs += fmt.Sprintf("%d-",m[i])
-//		//fmt.Println(fmt.Sprintf("%d:",m[i]))
-//	}
-//
-//	return rs[0:len(rs)-1]
-//}
 
 func (b *Ball) foreach1(f func(key string)){
 	for _,v :=range b.Reds{
@@ -165,7 +184,7 @@ func (b *Ball) foreach3(f func(key string)){
 				if k3<k2{
 					continue
 				}
-				f(fmt.Sprintf("%d:%d:5d",b.Reds[k1],b.Reds[k2],b.Reds[k3]))
+				f(fmt.Sprintf("%d:%d:%d",b.Reds[k1],b.Reds[k2],b.Reds[k3]))
 			}
 		}
 	}
@@ -185,9 +204,10 @@ func (b *Ball) EstimatePolicy(balls []*Ball,pat string) *EstimatePolicy{
 				break
 			}
 		}
-		avg   := len(balls)/total
+		avg   := float64(len(balls))/float64(total)
 		accstd = accstd + math.Abs(float64(avg - cnt))
 		estimates[key] = &Estimate{
+			Num:    len(balls)-1,
 			Key: 	key,
 			Last:   cnt,
 			AccCount: 	total,
@@ -203,7 +223,7 @@ func (b *Ball) EstimatePolicy(balls []*Ball,pat string) *EstimatePolicy{
 	b.foreach3(loop)
 	loop(key)
 	return &EstimatePolicy{
-		Key:       key,
+		PatKey:       key,
 		Estimates: estimates,
 	}
 }
@@ -232,36 +252,7 @@ func (b *Ball) KeyPartition(pat string) string{
 	for _,v := range pts {
 		rts += fmt.Sprintf("%d-",v.Cnt)
 	}
-	return rts[0:len(rts)-1]
-}
-
-func (b *Ball) PartitionGroup(balls []*Ball,pat string) *Estimate {
-	var cnt,total,found,accstd = 1,1,false,0.0
-	kNum := b.KeyPartition(pat)
-	for i:=len(balls)-1;i>=0;i--{
-		if e,v := balls[i].Policy[pat].Estimates[kNum]; !e {
-			if !found {
-				cnt ++
-			}
-		}else {
-			total ++
-			if !found{
-				found = true
-				accstd = balls[i].Attr.ParKey[pat].AccStd
-			}
-		}
-	}
-	avg   := len(balls)/total
-	accstd = accstd + math.Abs(float64(avg - cnt))
-	return &Estimate{
-		Key: 	kNum,
-		Last:   cnt,
-		AccCount: 	total,
-		Avg:   	avg,
-		Next:   2*avg - cnt,
-		AccStd: accstd,
-		Std:    accstd/float64(total),
-	}
+	return fmt.Sprintf("%s/%s",KEY_PREFIX,rts[0:len(rts)-1])
 }
 
 func (b *Ball) maxHole() MaxHole{
@@ -279,160 +270,14 @@ func (b *Ball) maxHole() MaxHole{
 		Len:        (end-start),
 	}
 }
-func (b *Ball) corelation1(balls []Ball,pre *Ball)*[34]Estimate {
-	if pre.Attr.CoRelate1 == nil{
-		pre.Attr.CoRelate1 = &[34]Estimate{}
-	}
-	co1 := *pre.Attr.CoRelate1
-
-	for _, i := range b.Reds{
-		co1[i].AccCount = co1[i].AccCount + 1
-	}
-
-	for k,_ := range co1{
-		if k == 0 {
-			continue
-		}
-		co,cnt,accstd := &co1[k],0,float64(0)
-
-		for i:=len(balls)-1;i>=0;i--{
-			if !balls[i].contains([]int{k}){
-				cnt ++
-			}else {
-				accstd = (*balls[i].Attr.CoRelate1)[k].AccStd
-				break
-			}
-		}
-		if co.AccCount <= 0 {
-			co.AccCount = 1
-		}
-		avg := len(balls)/co.AccCount
-		co.Avg = avg
-		co.Key = fmt.Sprintf("%d",k)
-		co.Last= cnt
-		co.Next= 2*avg - cnt
-		co.AccStd = accstd + math.Abs(float64(avg - cnt))
-		co.Std = co.AccStd/float64(co.AccCount)
-		co.FixStd = (math.Abs(float64(co.Next))+float64(co.AccCount) * co.Std)/(float64(co.AccCount)+1)
-		co.Expect = float64(co.Next)/co.FixStd
-	}
-	b.Attr.CoRelate1 = &co1
-	return b.Attr.CoRelate1
-}
-
-func (b *Ball) corelation2(balls []Ball,pre *Ball) *[34][34]Estimate {
-	if pre.Attr.CoRelate2 == nil{
-		pre.Attr.CoRelate2 = &[34]*[34]Estimate{}
-		for k,_ := range pre.Attr.CoRelate2{
-			pre.Attr.CoRelate2[k] = &[34]Estimate{}
-		}
-	}
-	co2 := *pre.Attr.CoRelate2
-	util.DeepCopy()
-	for _, bfirst := range b.Reds {
-		for _, bsecond := range b.Reds {
-			(*co2[bfirst])[bsecond].AccCount = (*co2[bfirst])[bsecond].AccCount + 1
-		}
-	}
-	for k1,_ := range co2{
-		if k1 == 0 {
-			continue
-		}
-		for k2,_ := range &co2[k1]{
-			if k2 == 0 {
-				continue
-			}
-
-			co,cnt,accstd := &co2[k1][k2],0,float64(0)
-
-			for i:=len(balls)-1;i>=0;i--{
-				if !balls[i].contains([]int{k1,k2}){
-					cnt ++
-				}else {
-					accstd = (*balls[i].Attr.CoRelate2)[k1][k2].AccStd
-					break
-				}
-			}
-			if co.Total <= 0 {
-				co.Total = 1
-			}
-			avg := len(balls)/co.Total
-			co.Avg = avg
-			co.Key = fmt.Sprintf("%d:%d",k1,k2)
-			co.Last= cnt
-			co.Next= 2*avg - cnt
-			co.AccStd = accstd + math.Abs(float64(avg - cnt))
-			co.Std = co.AccStd/float64(co.Total)
-		}
-	}
-	b.Attr.CoRelate2 = &co2
-	return b.Attr.CoRelate2
-}
-
-func (b *Ball) corelation3(balls []Ball,pre *Ball) *[34][34][34]Estimate {
-	if pre.Attr.CoRelate3 == nil{
-		pre.Attr.CoRelate3 = &[34][34][34]Estimate{}
-	}
-	co3 := *pre.Attr.CoRelate3
-	for _, bfirst := range b.Reds {
-		for _, bsecond := range b.Reds {
-			for _, bthird := range b.Reds{
-				co3[bfirst][bsecond][bthird].Total = co3[bfirst][bsecond][bthird].Total + 1
-			}
-		}
-	}
-
-	for k1,_ := range co3{
-		if k1 == 0 {
-			continue
-		}
-		for k2,_ := range co3[k1]{
-			if k2 == 0 {
-				continue
-			}
-			for k3,_ :=range co3[k2]{
-				if k3 == 0 {
-					continue
-				}
-
-				co,cnt,accstd := &co3[k1][k2][k3],0,float64(0)
-
-				for i:=len(balls)-1;i>=0;i--{
-					if !balls[i].contains([]int{k1,k2,k3}){
-						cnt ++
-					}else {
-						accstd = (*balls[i].Attr.CoRelate3)[k1][k2][k3].AccStd
-						break
-					}
-				}
-				if co.Total <= 0 {
-					co.Total = 1
-				}
-				avg := len(balls)/co.Total
-				co.Avg = avg
-				co.Key = fmt.Sprintf("%d:%d:%d",k1,k2,k3)
-				co.Last= cnt
-				co.Next= 2*avg - cnt
-				co.AccStd = accstd + math.Abs(float64(avg - cnt))
-				co.Std = co.AccStd/float64(co.Total)
-
-
-
-			}
-		}
-	}
-	b.Attr.CoRelate3 = &co3
-
-	return b.Attr.CoRelate3
-}
 
 func (b Ball) String() string{
 	var m string = ""
-	for k,v := range b.Attr.ParKey{
+	for k,v := range b.Policy{
 		m += fmt.Sprintf("%2s %+v",k,v) +" ## "
 	}
-	return fmt.Sprintf("DATE:%s  IDX:%d  REDS:%+2v   BLUE:%2d  [PARKEY: %95s   MAXHOLE: %+2v  FREQENCY: %v]",
-						b.Date,b.Index,b.Reds,b.Blue,m[0:len(m)-3],b.Attr.Hole,b.Attr.CoRelate1)
+	return fmt.Sprintf("DATE:%s  IDX:%d  REDS:%+2v   BLUE:%2d  [PARKEY: %95s   MAXHOLE: %+2v  FREQENCY: ]",
+						b.Date,b.Index,b.Reds,b.Blue,m[0:len(m)-3],b.Hole)
 }
 
 func (b * Ball) contains(r []int) bool {
@@ -484,7 +329,7 @@ func (bkt *Bucket) Intersection(b1,b2 Ball) []int{
 
 func LoadBucket() *Bucket {
 
-	var balls []Ball
+	var balls []*Ball
 
 	ForEachLine(func(line string){
 		l := strings.Split(line," ")
@@ -496,7 +341,7 @@ func LoadBucket() *Bucket {
 		r5, _ := strconv.Atoi(l[6])
 		r6, _ := strconv.Atoi(l[7])
 		b1, _ := strconv.Atoi(l[8])
-		ball := Ball{
+		ball := &Ball{
 			Date:	l[1],
 			Index:  idx,
 			Reds:	[]int{r1,r2,r3,r4,r5,r6},
@@ -504,20 +349,15 @@ func LoadBucket() *Bucket {
 		}
 		sort.Ints(ball.Reds)
 
-		pre := Ball{}
-		if len(balls)>0{
-			pre = balls[len(balls)-1]
+		//pre := Ball{}
+		//if len(balls)>0{
+		//	pre = balls[len(balls)-1]
+		//}
+		ball.Hole   = ball.maxHole()
+
+		ball.Policy = map[string]*EstimatePolicy{
+			K3:   	ball.EstimatePolicy(balls,K3),
 		}
-		ball.Attr = Attribute{
-			ParKey:map[string]*Estimate{
-				K3:ball.PartitionGroup(balls,K3),
-				K6:ball.PartitionGroup(balls,K6),
-			},
-			Hole:	 ball.maxHole(),
-		}
-		ball.corelation1(balls,&pre),
-		ball.corelation2(balls,&pre),
-		ball.corelation3(balls,&pre),
 
 		balls = append(balls,ball)
 		return
@@ -549,3 +389,59 @@ func ForEachLine(oper func(line string) ){
 	}
 }
 
+type KeyScore struct {
+	Pattern string
+	Key     string
+	Behind  int
+	// 标准差.度量期望组合的可信度
+	Std     float64
+	// 修正绝对标准差.假设当前出现期望的组合时的标准差
+	FixStd  float64
+	//分数分级
+	Expect  float64
+
+	Ball    *Ball
+}
+
+type ScoreList []*KeyScore
+
+
+func (s KeyScore) String()string{
+	return fmt.Sprintf("Key:%s, Score:%4d,ScoreExponent:%10f, Std:%10f,FixStd:%10f, Ball:%s",
+		s.Key,s.Behind,s.Expect,s.Std,s.FixStd,s.Ball)
+}
+
+
+func (l ScoreList) Len()int{
+	return len(l)
+}
+
+func (l ScoreList) Less(i,j int)bool{
+	if l[i].Expect >= l[j].Expect {
+		return true
+	}
+	return false
+}
+
+func (l ScoreList) Swap(i,j int){
+	t   := l[i]
+	l[i] = l[j]
+	l[j] = t
+}
+func (l ScoreList) NicePrint(){
+	for _,v := range l{
+		if v.FixStd >= 10{
+			continue
+		}
+		fmt.Println(v)
+	}
+	return
+}
+
+func (l ScoreList) ToJson() string{
+	b,e := json.Marshal(l)
+	if e != nil {
+		panic(e)
+	}
+	return string(b)
+}

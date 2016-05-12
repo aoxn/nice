@@ -7,51 +7,57 @@ import (
 	"github.com/spacexnice/nice/pkg/base"
 )
 
-type PartitionNicer struct {
+type KeyNicer struct {
 	Bucket 		*base.Bucket
 }
 
 
 
-func NewPartitionNicer(bucket *base.Bucket) *PartitionNicer {
+func NewPartitionNicer(bucket *base.Bucket) *KeyNicer {
 
-	return &PartitionNicer{
+	return &KeyNicer{
 		Bucket: 		bucket,
 	}
 }
 
-func (p *PartitionNicer) PKey3(idx int)ScoreList{
+func (p *KeyNicer) PKey3(idx int)base.ScoreList{
 	return p.predicate(idx,base.K3)
 }
 
-func (p *PartitionNicer) PKey6(idx int)ScoreList{
+func (p *KeyNicer) PKey6(idx int)base.ScoreList{
 	return p.predicate(idx,base.K6)
 }
 
-func (p *PartitionNicer) predicate(idx int,key string) ScoreList{
-	cnt,rt := 0,make(map[string]*KeyScore)
+func (p *KeyNicer) predicate(idx int,key string) base.ScoreList{
+	cnt,rt := 0,make(map[string]*base.KeyScore)
 	for i := idx - 1;i>=0;i--{
 		cnt ++
-		pk := p.Bucket.Balls[i].Attr.ParKey[key]
-		if _,e := rt[pk.Key];e{
+		pk := p.Bucket.Balls[i].Policy[key]
+		if _,e := rt[pk.PatKey];e{
 			continue
 		}
-		score  := cnt - pk.Next
-		fixStd := (math.Abs(float64(score))+float64(pk.AccCount) * pk.Std)/(float64(pk.AccCount)+1)
-		rt[pk.Key] = &KeyScore{
-			Key:	pk.Key,
-			Std:	pk.Std,
+		est := pk.Estimates[pk.PatKey]
+		score  := cnt - est.Next
+		fixStd := (math.Abs(float64(score))+float64(est.AccCount) * est.Std)/(float64(est.AccCount)+1)
+		rt[pk.PatKey] = &base.KeyScore{
+			Key:	pk.PatKey,
+			Std:	est.Std,
 			FixStd: fixStd,
 			Expect: float64(score)/fixStd,
 			Behind:	score,
-			Ball:	p.Bucket.Balls[i],
+  			Ball:	p.Bucket.Balls[i],
 		}
 	}
-	var ss,res []*KeyScore
-	for _,v := range rt{
+
+	return p.Prune(rt)
+}
+
+func (p *KeyNicer) Prune(ls map[string]*base.KeyScore) base.ScoreList {
+	var ss,res []*base.KeyScore
+	for _,v := range ls{
 		ss = append(ss,v)
 	}
-	sort.Sort(ScoreList(ss))
+	sort.Sort(base.ScoreList(ss))
 	for i,v := range ss {
 		if v.FixStd >= 10{
 			//过滤掉修正方差大于10的
@@ -65,7 +71,7 @@ func (p *PartitionNicer) predicate(idx int,key string) ScoreList{
 	return res
 }
 
-func (p *PartitionNicer) Show(idx int){
+func (p *KeyNicer) Show(idx int){
 	le := len(p.Bucket.Balls)
 	if idx > le{
 		return
