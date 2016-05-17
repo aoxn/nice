@@ -49,12 +49,12 @@ func (rec Record) LoadResult() Result{
 		glog.Warningf("It seems that this is the latest Predict,which Ball is unkonw,[%d][%d]\n",rec.IDX,rec.Index)
 		return res
 	}
-
 	e  = json.Unmarshal([]byte(rec.BallJson),&res.Ball)
 	if e != nil{
 		fmt.Println("Could be nil:",e)
 	}
-	//res.ParKey3 = res.Ball.Attr.ParKey[base.K3].Key
+
+	res.ParKey3 = res.Ball.Policy[base.K34].PatKey
 	res.Date    = res.Ball.Date
 	return res
 }

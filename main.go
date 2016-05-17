@@ -1,6 +1,13 @@
 package main
 
-import "fmt"
+import (
+	//"github.com/spacexnice/nice/pkg/base"
+	"github.com/spacexnice/nice/pkg/algorithm"
+	//"fmt"
+	//"github.com/golang/glog"
+	"github.com/spacexnice/nice/pkg/util"
+	"os"
+)
 
 type A struct {
 	S string
@@ -11,12 +18,25 @@ type B struct {
 }
 
 func main(){
-	b := B{}
-	b.M[1].S = "3"
-	a := b
-	a.M[1].S = "2"
-	var rt []int
-	rt = append(rt,2)
+	//
+	//a := int64(2 * 2.3 + 3)
+	//
+	//fmt.Println(a)
+	//
+	//bkt := base.NewBucket(false)
+	//
+	//x:= algorithm.NewRelateNicer(bkt).Haha()
+	//for _,vx := range x{
+	//
+	//	glog.Infof("MERGE: %+v\n",vx)
+	//}
 
-	fmt.Println(b,"::::::::::",a)
+
+	s,_ := os.Getwd()
+	db := util.OpenInit(s)
+	db.AutoMigrate(&algorithm.Record{})
+	w := algorithm.NewWorker(db)
+	w.FillDatabaseTest()
+
+
 }

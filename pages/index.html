@@ -72,10 +72,10 @@
                                     <tr>
                                         <th scope="row">{{$k}}</th>
                                         <td>{{$v.Key}}</td>
-                                        <td>{{$v.ScoreExp}}</td>
+                                        <td>{{$v.Expect}}</td>
                                         <td>{{$v.FixStd}}</td>
                                         <td>{{$v.Std}}</td>
-                                        <td>{{$v.Rank}}</td>
+                                        <td>{{$v.Behind}}</td>
                                     </tr>
                                     {{end}}
                                     </tbody>
@@ -89,7 +89,8 @@
                             <a class="pull-right" data-toggle="collapse" data-parent="#accord-{{$idx}}12" href="#layer-{{$idx}}">展开BALLS <i
                                     class="glyphicon glyphicon-collapse-down"></i></a>
                         </div>
-                        <div id="layer-{{$idx}}" class="row panel-collapse collapse" >
+                        <div class="popover-content">
+                            <div id="layer-{{$idx}}" class="editable panel-collapse collapse" data-toggle="tooltip" title="浏览" id="txt">
                             <table class="table table-bordered">
                                 <thead>
                                 <tr>
@@ -99,6 +100,7 @@
                                     <th>修正方差</th>
                                     <th>标准差</th>
                                     <th>分数</th>
+                                    <th>命中</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -106,14 +108,16 @@
                                 <tr>
                                     <th scope="row">{{$k}}</th>
                                     <td>{{$v.Key}}</td>
-                                    <td>{{$v.ScoreExp}}</td>
+                                    <td>{{$v.Expect}}</td>
                                     <td>{{$v.FixStd}}</td>
                                     <td>{{$v.Std}}</td>
-                                    <td>{{$v.Rank}}</td>
+                                    <td>{{$v.Behind}}</td>
+                                    <td>{{$v.Cross}}</td>
                                 </tr>
                                 {{end}}
                                 </tbody>
                             </table>
+                            </div>
                         </div>
 
                     </form>

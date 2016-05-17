@@ -15,10 +15,45 @@ import (
 )
 
 const (
-	 K3 = "11:11:11"
+	 K11= "5:6"
+	 K34 = "11:11:11"
 	 K6 = "6:5:6:5:6:5"
-	 KEY_PREFIX = "GRP"
+	 KEY_PREFIX = "GRP/"
 )
+
+var UK34 = &UnionKey{
+	// 11:11:11/1/6
+	Pattern:    K34,
+	Offset :  	1,
+	Count  :    6,
+	Length :    33,
+	Full   :    false,
+}
+
+var UK111 = &UnionKey{
+	// 11:11:11/1/6
+	Pattern:    K34,
+	Offset :  	12,
+	Count  :    6,
+	Length :    33,
+	Full   :    false,
+}
+var UK1112 = &UnionKey{
+	// 11:11:11/1/6
+	Pattern:    K34,
+	Offset :  	1,
+	Count  :    6,
+	Length :    33,
+	Full   :    false,
+}
+var UK1123 = &UnionKey{
+	// 11:11:11/1/6
+	Pattern:    K34,
+	Offset :  	1,
+	Count  :    6,
+	Length :    33,
+	Full   :    false,
+}
 
 type Ball struct {
 	//publish date
@@ -43,6 +78,7 @@ type Ball struct {
 type EstimatePolicy struct {
 	PatKey    string
 
+	UnionKey  *UnionKey
 	Estimates map[string]*Estimate
 }
 
@@ -59,7 +95,7 @@ type Estimate struct {
 	//被评估对象的平均出现次数
 	Avg      float64
 	//被评估对象的预计下一次出现次数
-	Next     int
+	Next     float64
 
 	//被评估对象出现频次的标准差
 	Std      float64
@@ -92,11 +128,14 @@ type Group struct {
 }
 
 
-func NewGroups(pat,key string) *[]Group{
-	var pts *[]Group
+func NewGroups(pat,key string) []*Group{
+	var pts []*Group
+
+	key   = strings.Replace(key,KEY_PREFIX,"",-1)
 	pats := strings.Split(pat,":")
 	keys := strings.Split(key,":")
 	start:= 1
+	//glog.Infoln("MYKEY: ",key)
 	for k,v := range pats {
 		if v == ":"{
 			continue
@@ -116,7 +155,28 @@ func NewGroups(pat,key string) *[]Group{
 	return pts
 }
 
+type UnionKey struct {
+	// 11:11:11
+	Pattern		string
 
+	//
+	Key 		string
+
+	// 1
+	Offset      int
+
+	// 2
+	Count  		int
+
+	// 33
+	Length      int
+
+	Full        bool
+}
+func (u *UnionKey) PKey()string{
+	// 11:11:11/1/2
+	return fmt.Sprintf("%s/%d/%d",u.Pattern,u.Offset,u.Count)
+}
 type MaxHole struct {
 	Start 	  int
 	End 	  int
@@ -132,11 +192,12 @@ type Pattern struct {
 type Bucket struct {
 	Balls 	  []*Ball
 	NextIDX   int
+	Product   bool
 }
 
-func NewBucket(force bool) *Bucket{
-	util.LoadFile(force)
-	return LoadBucket()
+func NewBucket(force bool,idx int) *Bucket{
+
+	return LoadBucket(idx,force)
 }
 
 
@@ -150,41 +211,139 @@ func (bkt *Bucket) BlueBall(idx int) int{
 	return bkt.Balls[idx].Blue
 }
 
+
+func (b *Bucket) AddPolicy(uk *UnionKey) {
+
+	for i:=1;i<len(b.Balls);i++{
+		b.Balls[i].Policy[uk.PKey()] = b.EstimatePolicy(i,uk)
+	}
+}
+func (b *Bucket) EstimatePolicy(iball int,uk *UnionKey) *EstimatePolicy{
+	ball      := b.Balls[iball]
+	estimates := map[string]*Estimate{}
+
+	loop := func(key string){
+		var cnt,total,accstd = 1,1,0.0
+		for i:=iball - 1;i>=0;i--{
+			iest:= b.Balls[i].Policy[uk.PKey()]
+			if iest == nil{
+				// This is the first one,return an arbitary estimates
+				break
+			}
+			if v,e := iest.Estimates[key]; !e {
+				cnt ++
+			}else {
+				total = v.AccCount + 1
+				accstd= v.AccStd
+				break
+			}
+		}
+		avg   := float64(iball + 1)/float64(total)
+		accstd = accstd + math.Abs(float64(avg) - float64(cnt))
+		estimates[key] = &Estimate{
+			Num:    iball,
+			Key: 	key,
+			Last:   cnt,
+			AccCount: 	total,
+			Avg:   	avg,
+			Next:   2*avg - float64(cnt),
+			AccStd: accstd,
+			Std:    accstd/float64(total),
+		}
+	}
+	key := ball.KeyPartition(uk.Pattern,uk.Offset)
+	loop(key)
+	if uk.Full{
+		// 是否计算Reds的组合,而不仅仅只是PatKey
+		ball.ForEachInGroup(uk,loop)
+	}
+	return &EstimatePolicy{
+		PatKey:       key,
+		UnionKey:     uk,
+		Estimates: estimates,
+	}
+}
+
+func (bkt *Bucket) FillBucktPolicy(list ScoreList){
+	for _,v := range list {
+		offset := 1
+		unionkey:= []*UnionKey{}
+		for _,skey:=range v.SplitKey(){
+			u := &UnionKey{
+				// 11:11:11/1/6
+				Pattern:    K11,
+				Offset :  	offset,
+				Count  :    skey,
+				Length :    11,
+				Full   :    false,
+			}
+			bkt.AddPolicy(u)
+
+			offset += 11
+			unionkey = append(unionkey,u)
+		}
+		v.Uk = unionkey
+	}
+}
+
 func (bkt *Bucket) NicePrint(){
 	for _,b := range bkt.Balls{
 		fmt.Println(b)
 	}
 }
 
-func (b *Ball) foreach1(f func(key string)){
-	for _,v :=range b.Reds{
-
-		f(fmt.Sprintf("%d",v))
-	}
-}
-
-func (b *Ball) foreach2(f func(key string)){
-	for k1,_ :=range b.Reds{
-		for k2,_ :=range b.Reds{
-			if k2 < k1 {
-				continue
-			}
-			f(fmt.Sprintf("%d:%d",b.Reds[k1],b.Reds[k2]))
-		}
-	}
-}
-
-func (b *Ball) foreach3(f func(key string)){
-	for k1,_ :=range b.Reds{
-		for k2,_ :=range b.Reds{
-			if k2 < k1{
-				continue
-			}
-			for k3,_ :=range b.Reds{
-				if k3<k2{
+func (b * Ball) ForEachInGroup(g *UnionKey,f func(key string)) {
+	for i := 1;i<=3;i ++ {
+		switch i {
+		case 1:
+			//glog.Info("Group Case 1")
+			for _, v := range b.Reds {
+				if v < g.Offset || v > (g.Offset + g.Length-1){
 					continue
 				}
-				f(fmt.Sprintf("%d:%d:%d",b.Reds[k1],b.Reds[k2],b.Reds[k3]))
+				f(fmt.Sprintf("%d", v))
+			}
+		case 2:
+			//glog.Info("Group Case 2")
+			for k1, v1 := range b.Reds {
+				if v1 < g.Offset || v1 > (g.Offset + g.Length-1){
+					continue
+				}
+				for k2, v2 := range b.Reds {
+					if k2 < k1 {
+						continue
+					}
+					if v2 < g.Offset || v2 > (g.Offset + g.Length-1){
+						continue
+					}
+					f(fmt.Sprintf("%d:%d", v1, v2))
+				}
+			}
+
+			//glog.Info("Group Case 2 end")
+		case 3:
+			//glog.Info("Group Case 3")
+			for k1, v1 := range b.Reds {
+				if v1 < g.Offset || v1 > (g.Offset + g.Length-1){
+					continue
+				}
+				for k2, v2 := range b.Reds {
+					if k2 < k1 {
+						continue
+					}
+					if v2 < g.Offset || v2 > (g.Offset + g.Length-1){
+						continue
+					}
+					for k3, v3 := range b.Reds {
+						if k3 < k2 {
+							continue
+						}
+						if v3 < g.Offset || v3 > (g.Offset + g.Length-1){
+							continue
+						}
+						f(fmt.Sprintf("%d:%d:%d", v1, v2, v3))
+					}
+				}
 			}
 		}
 	}
@@ -205,22 +364,19 @@ func (b *Ball) EstimatePolicy(balls []*Ball,pat string) *EstimatePolicy{
 			}
 		}
 		avg   := float64(len(balls))/float64(total)
-		accstd = accstd + math.Abs(float64(avg - cnt))
+		accstd = accstd + math.Abs(float64(avg) - float64(cnt))
 		estimates[key] = &Estimate{
 			Num:    len(balls)-1,
 			Key: 	key,
 			Last:   cnt,
 			AccCount: 	total,
 			Avg:   	avg,
-			Next:   2*avg - cnt,
+			Next:   2*avg - float64(cnt),
 			AccStd: accstd,
 			Std:    accstd/float64(total),
 		}
 	}
-	key := b.KeyPartition(pat)
-	b.foreach1(loop)
-	b.foreach2(loop)
-	b.foreach3(loop)
+	key := b.KeyPartition(pat,0)
 	loop(key)
 	return &EstimatePolicy{
 		PatKey:       key,
@@ -228,18 +384,24 @@ func (b *Ball) EstimatePolicy(balls []*Ball,pat string) *EstimatePolicy{
 	}
 }
 
-func (b *Ball) KeyPartition(pat string) string{
+
+//offset start from 1
+func (b *Ball) KeyPartition(pat string,offset int) string{
 	var pts []Pattern
-	s := strings.Split(pat,":")
+	s,t_cnt := strings.Split(pat,":"),0
 	for _,v := range s{
 		if v == ":"{
 			continue
 		}
 		i,_ := strconv.Atoi(v)
+		t_cnt += i
 		pts = append(pts,Pattern{Pat:i})
 	}
 	for _,v := range b.Reds {
-		rs := v
+		if v < offset || v >= offset + t_cnt{
+			continue
+		}
+		rs := v - offset + 1
 		for j,p := range pts {
 			rs = rs - p.Pat
 			if rs <= 0 {
@@ -250,9 +412,9 @@ func (b *Ball) KeyPartition(pat string) string{
 	}
 	var rts string = ""
 	for _,v := range pts {
-		rts += fmt.Sprintf("%d-",v.Cnt)
+		rts += fmt.Sprintf("%d:",v.Cnt)
 	}
-	return fmt.Sprintf("%s/%s",KEY_PREFIX,rts[0:len(rts)-1])
+	return fmt.Sprintf("%s%s",KEY_PREFIX,rts[0:len(rts)-1])
 }
 
 func (b *Ball) maxHole() MaxHole{
@@ -282,10 +444,10 @@ func (b Ball) String() string{
 
 func (b * Ball) contains(r []int) bool {
 	sort.Ints(r)
-	return len(b.intersection(r))>0
+	return len(b.Intersection(r))>0
 }
 
-func (b * Ball) intersection(r []int)[]int{
+func (b * Ball) Intersection(r []int)[]int{
 	var rt []int
 	for i,j:=0,0;i<len(b.Reds)&&j<len(r);{
 		if b.Reds[i] < r[j]{
@@ -327,7 +489,9 @@ func (bkt *Bucket) Intersection(b1,b2 Ball) []int{
 	return rt
 }
 
-func LoadBucket() *Bucket {
+func LoadBucket(idx int,force bool) *Bucket {
+
+	util.LoadFile(force)
 
 	var balls []*Ball
 
@@ -346,26 +510,24 @@ func LoadBucket() *Bucket {
 			Index:  idx,
 			Reds:	[]int{r1,r2,r3,r4,r5,r6},
 			Blue:	b1,
+			Policy: map[string]*EstimatePolicy{},
 		}
 		sort.Ints(ball.Reds)
 
-		//pre := Ball{}
-		//if len(balls)>0{
-		//	pre = balls[len(balls)-1]
-		//}
 		ball.Hole   = ball.maxHole()
-
-		ball.Policy = map[string]*EstimatePolicy{
-			K3:   	ball.EstimatePolicy(balls,K3),
-		}
 
 		balls = append(balls,ball)
 		return
 	})
 
+	next := len(balls)
+	if idx > 0 {
+		next = idx
+	}
+	glog.Infoln("预测期数:",next,":",len(balls))
 	return &Bucket{
 		Balls:	 balls,
-		NextIDX: len(balls),
+		NextIDX: next,
 	}
 }
 
@@ -390,9 +552,10 @@ func ForEachLine(oper func(line string) ){
 }
 
 type KeyScore struct {
+	PatKey  string
 	Pattern string
 	Key     string
-	Behind  int
+	Behind  float64
 	// 标准差.度量期望组合的可信度
 	Std     float64
 	// 修正绝对标准差.假设当前出现期望的组合时的标准差
@@ -400,14 +563,27 @@ type KeyScore struct {
 	//分数分级
 	Expect  float64
 
+	Cross   string
+
 	Ball    *Ball
+
+	Uk      []*UnionKey
+}
+
+func (k *KeyScore) SplitKey()[]int{
+	var balls []int
+	for _,v := range strings.Split(strings.Replace(k.Key,KEY_PREFIX,"",-1),":"){
+		i,_ := strconv.Atoi(v)
+		balls = append(balls,i)
+	}
+	return balls
 }
 
 type ScoreList []*KeyScore
 
 
 func (s KeyScore) String()string{
-	return fmt.Sprintf("Key:%s, Score:%4d,ScoreExponent:%10f, Std:%10f,FixStd:%10f, Ball:%s",
+	return fmt.Sprintf("Key:%s, Score:%10f,ScoreExponent:%10f, Std:%10f,FixStd:%10f, Ball:%s",
 		s.Key,s.Behind,s.Expect,s.Std,s.FixStd,s.Ball)
 }
 
@@ -427,6 +603,30 @@ func (l ScoreList) Swap(i,j int){
 	t   := l[i]
 	l[i] = l[j]
 	l[j] = t
+}
+func (l ScoreList) Merge() *KeyScore{
+	key,std,fixstd,expect,behind,pattern,pkey := "",0.0,0.0,0.0,0.0,"",""
+	for _,v := range l{
+		key += fmt.Sprintf("%s:",v.Key)
+		std += v.Std
+		fixstd += v.FixStd
+		expect += v.Expect
+		behind += v.Behind
+		pattern = v.Pattern
+		pkey    = v.PatKey
+		//glog.Infof("TEST : %+v\n",v)
+	}
+	//glog.Infoln("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")
+	le := float64(len(l))
+	return &KeyScore{
+		Key:  key[0:len(key)-1],
+		Std:  std/le,
+		FixStd: fixstd/le,
+		Expect: expect/le,
+		Behind: behind/le,
+		Pattern:pattern,
+		PatKey: pkey,
+	}
 }
 func (l ScoreList) NicePrint(){
 	for _,v := range l{

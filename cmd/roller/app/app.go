@@ -8,7 +8,7 @@ import (
 
 func app(){
     idx := 1491
-    prd := algorithm.NewPartitionNicer(base.NewBucket(false))
+    prd := algorithm.NewPartitionNicer(base.NewBucket(false,0))
     prd.PKey3(idx).NicePrint()
 
     fmt.Println("\n")
