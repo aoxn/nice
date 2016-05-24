@@ -25,31 +25,31 @@ func NewRelateNicer(bkt *base.Bucket) *RelateNicer{
 	}
 }
 
-func (p *RelateNicer) Haha()base.ScoreList{
-	return p.PreKey(430,base.ScoreList([]*base.KeyScore{
-		&base.KeyScore{
+func (p *RelateNicer) Haha()base.RankList {
+	return p.PreKey(430,base.RankList([]*base.RankScore{
+		&base.RankScore{
 			Key: "2:1:3",
 			Pattern:"11:11:11",
 		},
 	}))
 }
 
-func (p *RelateNicer) Predicate(idx int,list base.ScoreList)base.ScoreList{
+func (p *RelateNicer) Predicate(idx int,list base.RankList)base.RankList {
 	return p.PreKey(idx,list)
 }
 
 
-func (p *RelateNicer) PreKey(idx int, list base.ScoreList) base.ScoreList{
-	var rtp base.ScoreList
+func (p *RelateNicer) PreKey(idx int, list base.RankList) base.RankList {
+	var rtp base.RankList
 
 	for _,v := range list{
 		glog.Infoln("PMXY:",v)
-		grps := base.NewGroups(v.Pattern,v.Key)
+		grps := base.NewKeyGroups(v.Pattern,v.Key)
 
 		for m,g := range grps{
 
 			//glog.Infof("GROUP: %+v\n",g)
-			rt := make(map[string]*base.KeyScore)
+			rt := make(map[string]*base.RankScore)
 			p.ForEachInGroup(g,func(key string){
 
 				cnt := 0.0
@@ -63,7 +63,7 @@ func (p *RelateNicer) PreKey(idx int, list base.ScoreList) base.ScoreList{
 					}
 					score  := cnt - est.Next
 					fixStd := (math.Abs(float64(score))+float64(est.AccCount) * est.Std)/(float64(est.AccCount)+1)
-					rt[key] = &base.KeyScore{
+					rt[key] = &base.RankScore{
 						Key:	key,
 						PatKey: pk.PatKey,
 						Pattern: v.Pattern,
@@ -87,7 +87,7 @@ func (p *RelateNicer) PreKey(idx int, list base.ScoreList) base.ScoreList{
 
 	}
 	sort.Sort(rtp)
-	var res base.ScoreList
+	var res base.RankList
 	for _,v := range rtp {
 		//if v.FixStd >= 10{
 		//	//过滤掉修正方差大于10的
@@ -105,21 +105,21 @@ func (p *RelateNicer) PreKey(idx int, list base.ScoreList) base.ScoreList{
 	return res
 }
 
-func (p *RelateNicer) MergeGroups(grps []*base.Group) base.ScoreList{
+func (p *RelateNicer) MergeGroups(grps []*base.Group) base.RankList {
 	//尾递归
 
-	return p.merge(0,grps,base.ScoreList{})
+	return p.merge(0,grps,base.RankList{})
 }
 
-func (p *RelateNicer) merge(i int,grps []*base.Group,list base.ScoreList)base.ScoreList{
+func (p *RelateNicer) merge(i int,grps []*base.Group,list base.RankList)base.RankList {
 	if i >= len(grps){
 		//收割的时候
-		return base.ScoreList{list.Merge()}
+		return base.RankList{list.Merge()}
 	}
 	if (grps)[i].List.Len() == 0 {
 		return p.merge(i+1,grps,list)
 	}
-	var rtp base.ScoreList
+	var rtp base.RankList
 	for _,v := range (grps)[i].List{
 		l := append(list,v)
 		rtp = append(rtp,p.merge(i+1,grps,l)...)
@@ -127,13 +127,13 @@ func (p *RelateNicer) merge(i int,grps []*base.Group,list base.ScoreList)base.Sc
 	return rtp
 }
 
-func (p *RelateNicer) Prune(ls map[string]*base.KeyScore) base.ScoreList {
+func (p *RelateNicer) Prune(ls map[string]*base.RankScore) base.RankList {
 	//至少保留2个
-	var ss,res []*base.KeyScore
+	var ss,res []*base.RankScore
 	for _,v := range ls{
 		ss = append(ss,v)
 	}
-	sort.Sort(base.ScoreList(ss))
+	sort.Sort(base.RankList(ss))
 	for _,v := range ss {
 		//if v.FixStd >= 10{
 		//	//过滤掉修正方差大于10的

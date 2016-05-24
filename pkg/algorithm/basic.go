@@ -23,8 +23,8 @@ type Result struct {
 	Record      Record
 
 	ParKey3     string
-	K3          base.ScoreList
-	Nice        base.ScoreList
+	K3          base.RankList
+	Nice        base.RankList
 	Ball        base.Ball
 
 	Date        string

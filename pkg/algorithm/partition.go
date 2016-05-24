@@ -23,7 +23,7 @@ func NewPartitionNicer(bucket *base.Bucket) *KeyNicer {
 	}
 }
 
-func (p *KeyNicer) PKey3(idx int)base.ScoreList{
+func (p *KeyNicer) PKey3(idx int)base.RankList {
 	return p.predicate(idx,base.UK34)
 }
 
@@ -43,8 +43,8 @@ func (p *KeyNicer) keysum(key string) int{
 	return sum
 }
 
-func (p *KeyNicer) predicate(idx int, uk *base.UnionKey) base.ScoreList{
-	cnt,rt := 0.0,make(map[string]*base.KeyScore)
+func (p *KeyNicer) predicate(idx int, uk *base.UnionKey) base.RankList {
+	cnt,rt := 0.0,make(map[string]*base.RankScore)
 	for i := idx - 1;i>=1;i--{
 		pk := p.Bucket.Balls[i].Policy[uk.PKey()]
 		//glog.Infoln("AB:",pk.PatKey,"  ",uk.Count)
@@ -58,7 +58,7 @@ func (p *KeyNicer) predicate(idx int, uk *base.UnionKey) base.ScoreList{
 		est := pk.Estimates[pk.PatKey]
 		score  := cnt - est.Next
 		fixStd := (math.Abs(float64(score))+float64(est.AccCount) * est.Std)/(float64(est.AccCount)+1)
-		rt[pk.PatKey] = &base.KeyScore{
+		rt[pk.PatKey] = &base.RankScore{
 			Key:	pk.PatKey,
 			Pattern: uk.Pattern,
 			Std:	est.Std,
@@ -72,12 +72,12 @@ func (p *KeyNicer) predicate(idx int, uk *base.UnionKey) base.ScoreList{
 	return p.Prune(rt)
 }
 
-func (p *KeyNicer) Prune(ls map[string]*base.KeyScore) base.ScoreList {
-	var ss,res []*base.KeyScore
+func (p *KeyNicer) Prune(ls map[string]*base.RankScore) base.RankList {
+	var ss,res []*base.RankScore
 	for _,v := range ls{
 		ss = append(ss,v)
 	}
-	sort.Sort(base.ScoreList(ss))
+	sort.Sort(base.RankList(ss))
 	for _,v := range ss {
 		if v.FixStd >= 10{
 			//过滤掉修正方差大于10的

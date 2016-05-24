@@ -99,18 +99,18 @@ func (w *Worker) Work(bkt *base.Bucket){
 }
 
 
-func (w *Worker) partition(bkt *base.Bucket) base.ScoreList{
+func (w *Worker) partition(bkt *base.Bucket) base.RankList {
     //return NewPredicator(bkt).PKey3(len(bkt.Balls)-1)
 
     return NewPartitionNicer(bkt).PKey3(bkt.NextIDX)
 }
-func (w *Worker) relate(bkt *base.Bucket,list base.ScoreList) base.ScoreList{
+func (w *Worker) relate(bkt *base.Bucket,list base.RankList) base.RankList {
     //return NewPredicator(bkt).PKey3(len(bkt.Balls)-1)
 
     return NewRelateNicer(bkt).Predicate(bkt.NextIDX,list)
 }
 
-func (w *Worker) donice(idx int) base.ScoreList{
+func (w *Worker) donice(idx int) base.RankList {
     bkt := base.NewBucket(true,0)
     //prd.PKey3(idx).NicePrint()
     prd := NewPartitionNicer(bkt)
@@ -143,7 +143,7 @@ func (w *Worker) updatePreviousResult(bkt *base.Bucket) {
             return
         }
     }
-    var nice base.ScoreList
+    var nice base.RankList
     e  := json.Unmarshal([]byte(r.NiceJson),&nice)
     if e != nil {
         panic(e)

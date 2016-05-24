@@ -2,12 +2,13 @@ package main
 
 import (
 	//"github.com/spacexnice/nice/pkg/base"
-	"github.com/spacexnice/nice/pkg/algorithm"
+	//"github.com/spacexnice/nice/pkg/algorithm"
 	//"fmt"
 	//"github.com/golang/glog"
-	"github.com/spacexnice/nice/pkg/util"
-	"os"
+	//"github.com/spacexnice/nice/pkg/util"
+	//"os"
 )
+import "github.com/spacexnice/nice/pkg/base"
 
 type A struct {
 	S string
@@ -32,11 +33,12 @@ func main(){
 	//}
 
 
-	s,_ := os.Getwd()
-	db := util.OpenInit(s)
-	db.AutoMigrate(&algorithm.Record{})
-	w := algorithm.NewWorker(db)
-	w.FillDatabaseTest()
-
+	//s,_ := os.Getwd()
+	//db := util.OpenInit(s)
+	//db.AutoMigrate(&algorithm.Record{})
+	//w := algorithm.NewWorker(db)
+	//w.FillDatabaseTest()
+	base.NewBucket(false,1100)
+	base.Test()
 
 }
