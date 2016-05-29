@@ -5,8 +5,6 @@ import (
     "github.com/gin-gonic/gin"
     "net/http"
     "fmt"
-    "github.com/spacexnice/nice/pkg/algorithm"
-    //"github.com/spacexnice/nice/pkg/base"
 )
 
 type WebHandler struct {
@@ -22,7 +20,7 @@ func NewWebHandler(db * gorm.DB) * WebHandler{
 
 
 func (h * WebHandler) Index(c *gin.Context) {
-    res,rec := []algorithm.Result{},[]algorithm.Record{}
+    res,rec := []Result{},[]algorithm.Record{}
     e := h.DB.Limit(10).Order("idx desc").Find(&rec).Error
     if e != nil {
         c.HTML(http.StatusOK,

@@ -46,8 +46,8 @@ func (g *Group) GroupKey() string{
 }
 
 func (g Group) String() string{
-	return fmt.Sprintf("Level:%d/Index:%d/IndexInner:%d/Pattern:%+v/Start:%d/End:%d/AreaLen:%d",
-		g.Level,g.Index,g.IndexInner,*g.Pattern,g.Start,g.End,g.AreaLen)
+	return fmt.Sprintf("Level:%d/Index:%d/IndexInner:%d/Pattern:%+v/Start:%d/End:%d/AreaLen:%d/children:%d",
+		g.Level,g.Index,g.IndexInner,*g.Pattern,g.Start,g.End,g.AreaLen,len(g.Children))
 }
 
 func NewSubGroups(grp * []*Group,grpcount int,AddGroup func(g *Group)) *[]*Group{
@@ -62,7 +62,13 @@ func NewSubGroups(grp * []*Group,grpcount int,AddGroup func(g *Group)) *[]*Group
 				Parent:     v,
 				Pattern:    &Pattern{
 					Key:    p,
-					Value:  make(map[int]RankList),
+					Value: 	map[int]RankList{
+						6:RankList{
+							&RankScore{
+								Predict:[]int{6},
+							},
+						},
+					},
 				},
 				Start:      start,
 				End:        start + m - 1,
@@ -182,7 +188,7 @@ func (grp *Group) AddRankValue(balls *[]*Ball,pdt int){
 	rank,iball := RankList{},len(*balls) - 1
 	nice := func(){
 		cnt,rt := 0.0,make(map[string]*RankScore)
-		for i := iball - 1;i>=1;i-- {
+		for i := iball;i>=1;i-- {
 			pk := (*balls)[i].Policy[grp.GroupKey()]
 			//glog.Infoln("AB:",pk.PatKey,"  ",uk.Count)
 			// 过滤掉 key count != predict
@@ -198,15 +204,14 @@ func (grp *Group) AddRankValue(balls *[]*Ball,pdt int){
 			score  := cnt - est.Next
 			fixStd := (math.Abs(float64(score))+float64(est.AccCount) * est.Std)/(float64(est.AccCount)+1)
 			rt[est.Key] = &RankScore{
-				Key:	est.Key,
-				Pattern: fmt.Sprintf("%v",grp.Pattern.Key),
+				Key:	 est.Key,
+				Pattern: grp.Pattern.Key,
 				Predict: SplitKey(est.Key),
 				Std:	est.Std,
 				FixStd: fixStd,
 				Expect: float64(score)/fixStd,
 				Behind:	score,
 				Ball:	(*balls)[i],
-				Group:  grp,
 			}
 		}
 		for _,v := range rt{
@@ -214,20 +219,44 @@ func (grp *Group) AddRankValue(balls *[]*Ball,pdt int){
 		}
 	}
 	nice()
-	grp.Pattern.Value[pdt] = Prune(rank)
+	grp.Pattern.Value[pdt] = Prune(rank,pdt)
 }
 
+func MergeGroups(root *Group) RankList {
+	//尾递归
 
-func Prune(list RankList) RankList {
+	return combine(root,6)
+}
+
+func combine(root *Group,key int) RankList{
+	glog.Infoln("Group LEVEL: ",root)
+	if root.Children == nil{
+		return root.Pattern.Value[key]
+	}
 	var res RankList
+	for _,v := range root.Pattern.Value[key]{
+		r := RankList{}
+		for i,m := range v.Predict{
+			r = r.merge(combine(root.Children[i],m),true)
+		}
+		res = append(res,r...)
+	}
+	return res
+}
+
+func Prune(list RankList, pdt int) RankList {
+	res,cnt := RankList{},2
 	//glog.Infoln("BEFORE:",list)
 	sort.Sort(list)
+	if pdt == 1{
+		cnt = 1
+	}
 	for _,v := range list {
 		if v.FixStd >= 10{
 			//过滤掉修正方差大于10的
 			continue
 		}
-		if len(res) < 2 {
+		if len(res) < cnt {
 			//只取前4个
 			res=append(res,v)
 		}

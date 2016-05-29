@@ -1,4 +1,4 @@
-package algorithm
+package web
 
 import (
 	"github.com/spacexnice/nice/pkg/base"
