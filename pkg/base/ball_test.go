@@ -6,10 +6,10 @@ import (
 )
 
 func TestKeyPartition(t *testing.T) {
-	bkt := NewBucket(false,-1)
-	for i := 100;i<1900;i++{
+	bkt := NewBucket(false, -1)
+	for i := 100; i < 1900; i++ {
 		result := bkt.Nice(i)
-		t.Log("Result: ",i,"  ",result.Search(bkt.Balls[i]))
+		t.Log("Result: ", i, "  ", result.Search(bkt.Balls[i]))
 	}
 
 	bkt.Statistic()
